@@ -1,63 +1,61 @@
 <?php
-@mkdir(__DIR__ . '/data', 0775, true);
-ini_set('log_errors', '1');
-ini_set('error_log', __DIR__ . '/data/php_error.log');
-error_reporting(E_ALL);
+/* Robust downloader: CSV logging, safe headers, debug mode.
+   Works behind Apache even with compression/WAF quirks. */
 
-/* EARLY DEBUG */
-if (isset($_GET['probe'])) {
-  header('Content-Type: text/plain'); 
-  echo "fetch.php probe reached\n";
-  exit;
-}
-
-/* PHP 5.x–compatible download proxy with CSV logging + debug mode */
 mb_internal_encoding('UTF-8');
 
-/* ===== Config ===== */
+/* ================== CONFIG ================== */
 $config   = require __DIR__ . '/config/downloads.php';
 $baseDir  = rtrim(isset($config['base_dir']) ? $config['base_dir'] : '', '/');
 $products = isset($config['products']) ? $config['products'] : array();
 $ipSalt   = isset($config['ip_salt']) ? $config['ip_salt'] : 'fallback-salt';
 
-/* ===== Error logging to local file (never rely on php.ini) ===== */
-if (!is_dir(__DIR__ . '/data')) { @mkdir(__DIR__ . '/data', 0775, true); }
+/* ================== ERROR LOGGING ================== */
+$DATA_DIR = __DIR__ . '/data';
+if (!is_dir($DATA_DIR)) { @mkdir($DATA_DIR, 0775, true); }
 ini_set('log_errors', '1');
-ini_set('error_log', __DIR__ . '/data/php_error.log');
+ini_set('error_log', $DATA_DIR . '/php_error.log');
 error_reporting(E_ALL);
 
-/* ===== Simple helpers ===== */
-function bail($code, $msg, $detailArr) {
-    http_response_code($code);
-    header('Content-Type: text/plain; charset=UTF-8');
-    echo $msg;
-    @file_put_contents(__DIR__ . '/data/errors.log',
-        '['.date('c').'] '.$msg.' :: '.json_encode($detailArr)."\n",
-        FILE_APPEND
-    );
-    exit;
+/* ================== RUNTIME SAFETY ================== */
+// kill compression & buffering; avoids 500s from length mismatch
+@apache_setenv('no-gzip', '1');
+@ini_set('zlib.output_compression', '0');
+while (ob_get_level()) { ob_end_clean(); }
+
+/* toggle sending Content-Length: default OFF, enable with ?len=1 */
+$SEND_LENGTH = (isset($_GET['len']) && $_GET['len'] === '1');
+
+/* helper */
+function bail($code, $msg, $extra = array()) {
+  http_response_code($code);
+  header('Content-Type: text/plain; charset=UTF-8');
+  echo $msg;
+  @file_put_contents(__DIR__ . '/data/errors.log',
+    '['.date('c')."] $msg :: ".json_encode($extra)."\n", FILE_APPEND);
+  exit;
 }
 
-/* ===== Resolve product ===== */
+/* ================== RESOLVE PRODUCT ================== */
 $id = isset($_GET['id']) ? $_GET['id'] : '';
 if (!isset($products[$id])) {
-    bail(404, 'Unknown product', array('id' => $id));
+  bail(404, 'Unknown product', array('id'=>$id));
 }
 $rel   = isset($products[$id]['file'])  ? $products[$id]['file']  : '';
 $label = isset($products[$id]['label']) ? $products[$id]['label'] : basename($rel);
-$path  = $baseDir . '/' . $rel;
+$req   = $baseDir . '/' . $rel;
 
 $realBase = realpath($baseDir);
-$realFile = realpath($path);
+$realFile = realpath($req);
 
 if ($realFile === false || !is_file($realFile) || !is_readable($realFile)) {
-    bail(404, 'File not found', array('requested' => $path, 'realFile' => $realFile));
+  bail(404, 'File not found', array('req'=>$req, 'real'=>$realFile));
 }
 if ($realBase === false || strpos($realFile, $realBase) !== 0) {
-    bail(403, 'Access denied (outside base_dir)', array('realBase' => $realBase, 'realFile' => $realFile));
+  bail(403, 'Access denied (outside base_dir)', array('base'=>$realBase, 'file'=>$realFile));
 }
 
-/* ===== Meta + CSV log (SQLite optional later) ===== */
+/* ================== META + DEBUG ================== */
 clearstatcache(true, $realFile);
 $bytes = filesize($realFile);
 $ua    = substr(isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '', 0, 400);
@@ -65,76 +63,69 @@ $ref   = substr(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
 $ip    = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
 $ipHash = hash_hmac('sha256', $ip, $ipSalt);
 
-/* Debug dump if requested (before headers) */
+/* quick debug before headers */
 if (isset($_GET['debug'])) {
-    header('Content-Type: application/json; charset=UTF-8');
-    $out = array(
-        'ok'            => true,
-        'id'            => $id,
-        'file_exists'   => is_file($realFile),
-        'file_readable' => is_readable($realFile),
-        'bytes'         => $bytes,
-    );
-    if ($_GET['debug'] === '2') {
-        $out['realBase'] = $realBase;
-        $out['realFile'] = $realFile;
-    }
-    echo json_encode($out);
-    exit;
+  header('Content-Type: application/json; charset=UTF-8');
+  $out = array(
+    'ok' => true,
+    'id' => $id,
+    'file_exists' => is_file($realFile),
+    'file_readable' => is_readable($realFile),
+    'bytes' => $bytes,
+    'send_length' => $SEND_LENGTH,
+  );
+  if ($_GET['debug'] === '2') { $out['realFile'] = $realFile; $out['realBase'] = $realBase; }
+  echo json_encode($out, JSON_PRETTY_PRINT);
+  exit;
 }
 
-/* CSV logging (never block the download on failure) */
+/* ================== CSV LOGGING (non-blocking) ================== */
 try {
-    $csv = __DIR__ . '/data/downloads.csv';
-    $fh = @fopen($csv, 'ab');
-    if ($fh) {
-        if (flock($fh, LOCK_EX)) {
-            fputcsv($fh, array(date('c'), $id, basename($realFile), $bytes, $ipHash, $ua, $ref));
-            flock($fh, LOCK_UN);
-        }
-        fclose($fh);
-    } else {
-        @file_put_contents(__DIR__ . '/data/errors.log',
-            '['.date('c')."] csv open fail: $csv\n", FILE_APPEND);
+  $csv = $DATA_DIR . '/downloads.csv';
+  $fh  = @fopen($csv, 'ab');
+  if ($fh) {
+    if (flock($fh, LOCK_EX)) {
+      fputcsv($fh, array(date('c'), $id, basename($realFile), $bytes, $ipHash, $ua, $ref));
+      flock($fh, LOCK_UN);
     }
+    fclose($fh);
+  } else {
+    @file_put_contents($DATA_DIR . '/errors.log',
+      '['.date('c')."] csv open fail: $csv\n", FILE_APPEND);
+  }
 } catch (Exception $e) {
-    @file_put_contents(__DIR__ . '/data/errors.log',
-        '['.date('c')."] csv log fail: ".$e->getMessage()."\n", FILE_APPEND);
+  @file_put_contents($DATA_DIR . '/errors.log',
+    '['.date('c')."] csv log fail: ".$e->getMessage()."\n", FILE_APPEND);
 }
 
-/* ===== Stream file ===== */
+/* ================== HEADERS ================== */
+// conservative type (switch to finfo if you want)
 $mime = 'application/x-netcdf';
-if (function_exists('finfo_open')) {
-    $fi = @finfo_open(FILEINFO_MIME_TYPE);
-    if ($fi) {
-        $det = @finfo_file($fi, $realFile);
-        if ($det) { $mime = $det; }
-        @finfo_close($fi);
-    }
-}
-
-/* Clear any existing buffers to avoid "headers already sent" + memory spikes */
-while (ob_get_level()) { ob_end_clean(); }
 
 header('Content-Type: ' . $mime);
 header('Content-Disposition: attachment; filename="' . basename($realFile) . '"');
-header('Content-Length: ' . $bytes);
+if ($SEND_LENGTH) {
+  // Only enable once you’ve verified no gzip/proxy mangling
+  header('Content-Length: ' . $bytes);
+}
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: private, max-age=0, must-revalidate');
 header('Accept-Ranges: none');
 
+/* ================== STREAM ================== */
 $fp = @fopen($realFile, 'rb');
-if ($fp === false) {
-    bail(500, 'Unable to open file for reading', array('realFile' => $realFile));
+if (!$fp) {
+  bail(500, 'Unable to open file for reading', array('file'=>$realFile));
 }
 ignore_user_abort(true);
 set_time_limit(0);
+
 $chunk = 8192;
 while (!feof($fp)) {
-    $buf = fread($fp, $chunk);
-    if ($buf === false) { break; }
-    echo $buf;
-    @flush();
+  $buf = fread($fp, $chunk);
+  if ($buf === false) break;
+  echo $buf;
+  @flush();
 }
 fclose($fp);
 exit;
