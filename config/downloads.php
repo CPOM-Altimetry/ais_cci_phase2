@@ -1,4 +1,6 @@
 <?php
+defined('AIS_CCI_APP') || exit;
+
 return [
   // one level above subfolders like single_mission/, multi_mission/, etc.
   'base_dir' => '/cpnet/altimetry/landice/ais_cci_plus_phase2/products',

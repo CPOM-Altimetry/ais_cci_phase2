@@ -9,6 +9,8 @@
  *   debug=2  = extended debug (paths, client_ip, geoip class, etc.)
  */
 
+if (!defined('AIS_CCI_APP')) define('AIS_CCI_APP', true);
+
 if (function_exists('mb_internal_encoding')) { mb_internal_encoding('UTF-8'); }
 
 // --------------------------- Config & paths ---------------------------
