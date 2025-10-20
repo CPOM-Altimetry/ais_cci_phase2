@@ -161,4 +161,143 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
       <!-- Filters -->
       <form class="filters" method="get" action="">
-        <label f
+        <label for="days">Range:</label>
+        <select id="days" name="days" onchange="this.form.submit()">
+          <?php foreach ($validDays as $d): ?>
+            <option value="<?php echo h($d); ?>" <?php echo $d===$daysParam?'selected':''; ?>>
+              <?php echo h(days_label($d)); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+
+        <label for="product">Product:</label>
+        <select id="product" name="product" onchange="this.form.submit()">
+          <option value="">All products</option>
+          <?php foreach ($products as $pid=>$meta): ?>
+            <option value="<?php echo h($pid); ?>" <?php echo $pid===$prodParam?'selected':''; ?>>
+              <?php echo h($pid.' — '.($meta['label'] ?? $meta['file'] ?? '')); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+
+        <noscript><button type="submit">Apply</button></noscript>
+      </form>
+
+      <div class="stats-grid">
+        <div class="card">
+          <h4>Summary</h4>
+          <div class="body">
+            <div><strong>Total downloads:</strong> <?php echo number_format($total); ?></div>
+            <div class="muted">
+              Range: <?php echo h($sinceYmd ? ($sinceYmd.' → '.($maxTs ? substr($maxTs,0,10) : 'today')) : 'All time'); ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Top Countries</h4>
+          <div class="body">
+            <?php if (!$byCountry): ?>
+              <div class="muted">No data.</div>
+            <?php else: ?>
+              <table class="stats">
+                <thead><tr><th>Country</th><th style="width:110px">Downloads</th></tr></thead>
+                <tbody>
+                  <?php foreach ($byCountry as $r): ?>
+                    <tr>
+                      <td><?php echo h($r['name']); ?> <span class="badge"><?php echo h($r['iso']); ?></span></td>
+                      <td><?php echo number_format((int)$r['cnt']); ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
+          <h4>Downloads by Product</h4>
+          <div class="body">
+            <?php if (!$byProduct): ?>
+              <div class="muted">No data.</div>
+            <?php else: ?>
+              <table class="stats">
+                <thead><tr><th>Product</th><th>Label</th><th style="width:110px">Downloads</th></tr></thead>
+                <tbody>
+                  <?php foreach ($byProduct as $r):
+                      $pid = $r['product_id'];
+                      $label = $products[$pid]['label'] ?? '';
+                  ?>
+                    <tr>
+                      <td><?php echo h($pid); ?></td>
+                      <td><?php echo h($label ?: $r['file_name']); ?></td>
+                      <td><?php echo number_format((int)$r['cnt']); ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
+          <h4>Daily trend (<?php echo h(days_label($daysParam)); ?>)</h4>
+          <div class="body">
+            <?php if (!$daily): ?>
+              <div class="muted">No data.</div>
+            <?php else: ?>
+              <table class="stats">
+                <thead><tr><th>Date</th><th style="width:110px">Downloads</th></tr></thead>
+                <tbody>
+                  <?php foreach ($daily as $r): ?>
+                    <tr>
+                      <td><?php echo h($r['day']); ?></td>
+                      <td><?php echo number_format((int)$r['cnt']); ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
+          <h4>Most recent 100 downloads</h4>
+          <div class="body">
+            <?php if (!$recent): ?>
+              <div class="muted">No data.</div>
+            <?php else: ?>
+              <table class="stats">
+                <thead>
+                  <tr>
+                    <th style="width:170px">Timestamp (UTC)</th>
+                    <th>Product</th>
+                    <th>Country</th>
+                    <th>Referrer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($recent as $r): ?>
+                    <tr>
+                      <td><?php echo h($r['ts']); ?></td>
+                      <td><?php echo h($r['product_id']); ?></td>
+                      <td><?php
+                        $iso = $r['country_iso'] ?: '??';
+                        $nm  = $r['country_name'] ?: 'Unknown';
+                        echo h($nm).' '; ?><span class="badge"><?php echo h($iso); ?></span>
+                      </td>
+                      <td class="muted"><?php echo h($r['referer'] ?: '—'); ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            <?php endif; ?>
+          </div>
+        </div>
+
+      </div><!-- /stats-grid -->
+
+    <?php endif; ?>
+  </div>
+</body>
+</html>
