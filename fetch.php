@@ -2,117 +2,133 @@
 declare(strict_types=1);
 mb_internal_encoding('UTF-8');
 
+/* ================== CONFIG ================== */
 $config   = require __DIR__ . '/config/downloads.php';
 $baseDir  = rtrim($config['base_dir'] ?? '', '/');
 $products = $config['products'] ?? [];
+$ipSalt   = $config['ip_salt'] ?? 'fallback-salt';
 
-/* ---------- helpers ---------- */
-function bail(int $code, string $msg, ?string $detail = null): void {
+/* ================== DEBUG + LOGGING ================== */
+/* Write PHP errors here so they never vanish into Apache logs */
+@mkdir(__DIR__ . '/data', 0775, true);
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/data/php_error.log');
+error_reporting(E_ALL);
+
+/* Collect debug info (printed only with ?debug=1) */
+$DEBUG = [
+  'ok' => false,
+  'step' => 'start',
+  'id' => $_GET['id'] ?? null,
+  // don’t expose absolute paths unless debug=2
+  'file_exists' => null,
+  'file_readable' => null,
+  'bytes' => null,
+  'headers_sent' => null,
+  'ready_to_stream' => false,
+];
+
+/* Helper: bail with HTTP code and log */
+function bail(int $code, string $msg, array $debug = []): void {
     http_response_code($code);
     header('Content-Type: text/plain; charset=UTF-8');
     echo $msg;
-    if ($detail) {
-        @file_put_contents(__DIR__ . '/data/errors.log',
-            '['.date('c')."] $msg :: $detail\n",
-            FILE_APPEND);
-    }
+    @file_put_contents(__DIR__ . '/data/errors.log',
+        '['.date('c')."] $msg :: " . json_encode($debug) . "\n",
+        FILE_APPEND
+    );
     exit;
 }
 
-/* ---------- resolve product ---------- */
+/* ================== RESOLVE PRODUCT ================== */
+$DEBUG['step'] = 'resolve_id';
 $id = $_GET['id'] ?? '';
 if (!isset($products[$id])) {
-    bail(404, 'Unknown product', "id=$id");
+    $DEBUG['ok'] = false;
+    bail(404, 'Unknown product', ['id' => $id]);
 }
-
 $rel   = $products[$id]['file'] ?? '';
 $label = $products[$id]['label'] ?? basename($rel);
 $path  = $baseDir . '/' . $rel;
 
+$DEBUG['step'] = 'realpath';
 $realBase = realpath($baseDir) ?: '';
 $realFile = realpath($path) ?: '';
+$DEBUG['file_exists']   = is_file($realFile);
+$DEBUG['file_readable'] = is_readable($realFile);
 
-if (!$realFile || !is_file($realFile) || !is_readable($realFile)) {
-    bail(404, 'File not found', $path);
+if (!$DEBUG['file_exists'] || !$DEBUG['file_readable']) {
+    bail(404, 'File not found', ['realFile' => $realFile, 'exists' => $DEBUG['file_exists'], 'readable' => $DEBUG['file_readable']]);
 }
 if ($realBase === '' || strpos($realFile, $realBase) !== 0) {
-    bail(403, 'Access denied', "outside base: $realFile");
+    bail(403, 'Access denied (outside base)', ['realBase' => $realBase, 'realFile' => $realFile]);
 }
 
-/* ---------- gather meta ---------- */
-$bytes = filesize($realFile);
-$ua    = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 400);
-$ref   = substr($_SERVER['HTTP_REFERER'] ?? '', 0, 400);
+/* ================== GATHER META ================== */
+$DEBUG['step']  = 'stat';
+clearstatcache(true, $realFile);
+$bytes          = filesize($realFile);
+$DEBUG['bytes'] = $bytes;
 
-/* ---------- ensure data dir ---------- */
-$dataDir = __DIR__ . '/data';
-if (!is_dir($dataDir)) { @mkdir($dataDir, 0775, true); }
+$ua  = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 400);
+$ref = substr($_SERVER['HTTP_REFERER'] ?? '', 0, 400);
+$ip  = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$ipHash = hash_hmac('sha256', $ip, $ipSalt);
 
-/* ---------- try SQLite logging, else CSV ---------- */
-$logged = false;
+/* ================== LIGHTWEIGHT LOG (CSV) ================== */
+$DEBUG['step'] = 'csv_log';
 try {
-    if (in_array('sqlite', PDO::getAvailableDrivers(), true) || in_array('sqlite3', PDO::getAvailableDrivers(), true)) {
-        $pdo = new PDO('sqlite:' . $dataDir . '/downloads.sqlite', null, null, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS downloads (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ts TEXT NOT NULL,
-                product_id TEXT NOT NULL,
-                filename TEXT NOT NULL,
-                bytes INTEGER NOT NULL,
-                user_agent TEXT,
-                referer TEXT
-            )");
-        $stmt = $pdo->prepare("
-            INSERT INTO downloads (ts, product_id, filename, bytes, user_agent, referer)
-            VALUES (datetime('now'), :pid, :fn, :bytes, :ua, :ref)");
-        $stmt->execute([
-            ':pid'   => $id,
-            ':fn'    => basename($realFile),
-            ':bytes' => $bytes,
-            ':ua'    => $ua,
-            ':ref'   => $ref,
-        ]);
-        $logged = true;
+    $csv = __DIR__ . '/data/downloads.csv';
+    $fh = fopen($csv, 'ab');
+    if ($fh) {
+        if (flock($fh, LOCK_EX)) {
+            fputcsv($fh, [date('c'), $id, basename($realFile), $bytes, $ipHash, $ua, $ref]);
+            flock($fh, LOCK_UN);
+        }
+        fclose($fh);
+    } else {
+        @file_put_contents(__DIR__ . '/data/errors.log',
+            '['.date('c')."] csv open fail: $csv\n", FILE_APPEND);
     }
 } catch (Throwable $e) {
-    @file_put_contents($dataDir . '/errors.log',
-        '['.date('c')."] sqlite log fail: ".$e->getMessage()."\n", FILE_APPEND);
+    @file_put_contents(__DIR__ . '/data/errors.log',
+        '['.date('c')."] csv log fail: ".$e->getMessage()."\n", FILE_APPEND);
+    // carry on
 }
 
-if (!$logged) {
-    // Fallback CSV
-    try {
-        $fh = fopen($dataDir . '/downloads.csv', 'ab');
-        if ($fh) {
-            if (flock($fh, LOCK_EX)) {
-                fputcsv($fh, [date('c'), $id, basename($realFile), $bytes, $ua, $ref]);
-                flock($fh, LOCK_UN);
-            }
-            fclose($fh);
-        }
-    } catch (Throwable $e) {
-        @file_put_contents($dataDir . '/errors.log',
-            '['.date('c')."] csv log fail: ".$e->getMessage()."\n", FILE_APPEND);
-        // continue anyway
+/* ================== OPTIONAL DEBUG OUTPUT ================== */
+if (isset($_GET['debug'])) {
+    header('Content-Type: application/json; charset=UTF-8');
+    if ($_GET['debug'] === '2') {
+        // show absolute paths only if debug=2
+        $DEBUG['realBase'] = $realBase;
+        $DEBUG['realFile'] = $realFile;
     }
+    $DEBUG['ok'] = true;
+    echo json_encode($DEBUG, JSON_PRETTY_PRINT);
+    exit;
 }
 
-/* ---------- stream file ---------- */
+/* ================== STREAM FILE ================== */
+$DEBUG['step'] = 'stream_prep';
 $mime = 'application/x-netcdf';
 if (function_exists('finfo_open')) {
-    $fi = finfo_open(FILEINFO_MIME_TYPE);
+    $fi = @finfo_open(FILEINFO_MIME_TYPE);
     if ($fi) {
         $det = @finfo_file($fi, $realFile);
-        if ($det) $mime = $det;
-        finfo_close($fi);
+        if ($det) { $mime = $det; }
+        @finfo_close($fi);
     }
 }
 
-// Clear any buffers to avoid memory spikes
+/* Prevent stray output */
 while (ob_get_level()) { ob_end_clean(); }
+
+$DEBUG['headers_sent'] = headers_sent();
+if ($DEBUG['headers_sent']) {
+    @file_put_contents(__DIR__ . '/data/errors.log',
+        '['.date('c')."] headers already sent before streaming\n", FILE_APPEND);
+}
 
 header('Content-Type: ' . $mime);
 header('Content-Disposition: attachment; filename="' . basename($realFile) . '"');
@@ -121,10 +137,27 @@ header('X-Content-Type-Options: nosniff');
 header('Cache-Control: private, max-age=0, must-revalidate');
 header('Accept-Ranges: none');
 
-$fp = fopen($realFile, 'rb');
+$DEBUG['ready_to_stream'] = true;
+
+/* Robust chunked streaming to avoid memory spikes */
+$DEBUG['step'] = 'streaming';
+$fp = @fopen($realFile, 'rb');
 if ($fp === false) {
-    bail(500, 'Unable to open file', $realFile);
+    bail(500, 'Unable to open file for reading', ['realFile' => $realFile]);
 }
-fpassthru($fp);
+
+ignore_user_abort(true);
+$chunk = 8192;
+set_time_limit(0);
+while (!feof($fp)) {
+    $buf = fread($fp, $chunk);
+    if ($buf === false) { break; }
+    echo $buf;
+    // Flush to client
+    if (function_exists('fastcgi_finish_request')) {
+        // not strictly necessary here, but harmless
+    }
+    @flush();
+}
 fclose($fp);
 exit;
