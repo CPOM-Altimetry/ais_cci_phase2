@@ -1,0 +1,253 @@
+/* ========== Base & Banner ========== */
+:root { --brand-blue:#033867; }
+
+html,body{
+  margin:0;
+  font-family:"Open Sans",sans-serif;
+  font-optical-sizing:auto;
+  font-weight:500;
+  font-style:normal;
+  font-variation-settings:"wdth" 100;
+}
+
+.blue-banner{
+  background-color:var(--brand-blue);
+  color:#fff;
+  padding:10px;
+  text-align:center;
+  font-size:1.6em;
+
+  /* left logo (ESA) then right logo (AIS) */
+  background-image:url('../images/ESA_logo_white_transparent.png'), url('../images/ais_cci_phase2_logo.png');
+  background-position:left center, calc(100% - 20px) center;
+  background-repeat:no-repeat, no-repeat;
+  background-size:auto 90%, auto 80%;
+
+  padding-left:140px;
+  padding-right:140px;
+  height:60px;
+}
+
+.header-txt-small{ display:none; }
+.header-txt-large{
+  font-weight:600;
+  font-size:1.2em;
+  display:inline-block;
+}
+
+.light-grey-row{
+  background:#f2f2f2;
+  padding:18px 20px;
+  color:#111;
+  font-size:16px;
+  line-height:1.4;
+}
+
+/* ========== Tabs ========== */
+.tab{
+  display:flex;
+  align-items:stretch;
+  flex-wrap:wrap;         /* wrap cleanly on narrower widths */
+  border:1px solid #ccc;
+  background:#f1f1f1;
+  overflow:visible;       /* don’t clip the last item when wrapping */
+}
+.tab button{
+  background:inherit;
+  border:none;
+  outline:none;
+  cursor:pointer;
+  padding:14px 16px;
+  transition:.3s;
+  font-size:17px;
+  flex:0 0 auto;          /* keep natural width */
+  white-space:nowrap;
+}
+.tab button:hover{ background:#ddd; }
+.tab button.active{ background:#ccc; }
+
+/* allow placing a specific tab at the far right (Downloads) */
+.tab .tab-right{ margin-left:auto; }
+
+/* Download tab content layout */
+.tablinks.tab-download{
+  display:flex;
+  align-items:center;    /* vertically center the icon */
+  gap:10px;
+  text-align:left;       /* so inner text isn’t centered */
+  border-left:1px solid #ddd;
+}
+.tablinks.tab-download .download_txt{
+  display:inline-block;
+  font-size:12px;
+  line-height:1.1;
+  text-align:left;
+}
+.tablinks.tab-download .material-icons{
+  font-size:22px;
+  line-height:1;
+}
+
+/* ========== Tab content panes ========== */
+.tabcontent{
+  display:none;
+  padding:6px 12px;
+  border:1px solid #ccc;
+  border-top:none;
+}
+.tabcontent-intro{
+  display:none;
+  padding:10px;
+  border:1px solid #ccc;
+  border-top:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.85),rgba(255,255,255,.85)),
+    url('../images/intro-bg.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+
+/* ========== Toolbar (grey strip above quicklooks) ========== */
+/* Keeping your fixed-height/absolute layout */
+.image_section{
+  background:#f8f8f8;
+  position:relative;
+  width:100%;
+  height:55px;  /* toolbar height on desktop */
+}
+
+.my-button-color{ background:#21578b; color:#fff; }
+
+/* Right-side Hill Shade block */
+.toggle-container-left{
+  position:absolute; top:0; right:10px;
+  background:transparent;
+  padding:5px;
+  display:flex; flex-direction:column; align-items:center;
+  z-index:2;
+}
+.toggle-label{ font-weight:700; font-size:13px; margin-bottom:5px; }
+.toggle-option{ font-size:12px; color:#555; }
+
+/* Switch */
+.switch{ position:relative; display:inline-block; width:45px; height:20px; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider{
+  position:absolute; inset:0; cursor:pointer;
+  background:#ccc; transition:background .2s; border-radius:26px;
+}
+.slider:before{
+  content:""; position:absolute; height:14px; width:14px;
+  left:3px; bottom:3px; background:#fff; transition:transform .2s; border-radius:50%;
+}
+.switch input:checked + .slider{ background:var(--brand-blue); }
+.switch input:checked + .slider:before{ transform:translateX(24px); }
+
+/* Optional emphasis on active side of toggle text */
+.toggle-switch{ display:flex; align-items:center; gap:8px; }
+.toggle-switch .toggle-option{ font-size:.9rem; color:#666; }
+.toggle-switch.on .tog_to_hide{ font-weight:700; color:var(--brand-blue); }
+.toggle-switch:not(.on) .toggle-option:first-child{ font-weight:700; color:var(--brand-blue); }
+
+/* Left-side row inside the toolbar */
+.image_section .control-row{
+  position:absolute;
+  top:0; left:50px; right:140px;  /* leave room for the right toggle */
+  height:55px;
+  display:flex; align-items:center; gap:16px;
+  padding:8px 0;
+  z-index:2;
+}
+/* Parameter dropdown lives in normal flow within the row */
+.image_section .control-row #product_dropdown{ position:static; margin:0; }
+.image_section .control-row #parameter_txt{ padding:0; margin-right:8px; }
+
+/* ========== Mission select (big-image view) ========== */
+.mission-select-form{ display:flex; align-items:center; gap:8px; margin:0; }
+.mission-select-label{ font-weight:600; }
+.mission-select{
+  height:36px; padding:4px 10px;
+  border:1px solid #ccc; border-radius:4px;
+  background:#fff; font-size:14px;
+}
+
+/* ========== Misc helpers ========== */
+.date1{ font-size:16px; }
+.date2{ font-size:14px; }
+.images-wrap2{ margin-top:20px; }  /* extra space under toolbar (single-image layout) */
+
+#latest_release{
+  background:#d9d9d9; padding:10px 16px; border-radius:4px;
+  font-weight:600; text-align:center;
+}
+
+/* Keep "Parameter:" on the same light grey as the toolbar */
+.image_section .control-row #product_dropdown,
+.image_section .control-row #parameter_txt{
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* tidy spacing */
+.image_section .control-row #parameter_txt{
+  padding: 0;
+  margin-right: 8px;
+}
+/*
+.download-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  background:#21578b; color:#fff; text-decoration:none;
+  padding:10px 14px; border-radius:4px;
+}
+.download-btn .material-icons{ line-height:1; }
+.download-btn:hover{ background:#1b4a73; }
+*/
+
+
+
+/* ========== Responsive ========== */
+@media (max-width:1100px){
+  .blue-banner{
+    background-size:auto 80%, auto 60%;
+    padding-right:100px; height:50px;
+  }
+  .header-txt-large{ font-size:1em; }
+  .date1{ font-size:14px; }
+  .date2{ font-size:12px; }
+}
+
+/* hide the single-mission logo earlier to avoid crowding */
+@media (max-width:890px){
+  #single_mission_logo{ display:none; }
+}
+
+/* toolbar/labels + banner tweaks on narrow screens */
+@media (max-width:840px){
+  .blue-banner{
+    background-image:url('../images/ESA_logo_white_transparent.png'), none;
+    padding-right:20px; height:80px;
+  }
+  .header-txt-large{ display:none; }
+  .header-txt-small{ display:inline-block; font-size:1em; }
+  .mission-select{ max-width:140px; }
+  .date1{ font-size:12px; }
+  .date2{ font-size:10px; }
+  #latest_release{ display:none; }
+}
+
+/* medium width polish */
+@media (max-width:880px){
+  .tab button{ padding:10px 12px; font-size:16px; }
+  .tablinks.tab-download .material-icons{ font-size:20px; }
+}
+
+/* ensure the right-aligned button remains last when the bar wraps */
+@media (max-width:720px){
+  .tab .tab-right{ order:999; }
+}
+
+/* super-narrow: show icon only for downloads */
+@media (max-width:520px){
+  .tablinks.tab-download .download_txt{ display:none; }
+}
