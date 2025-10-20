@@ -1,5 +1,10 @@
 <?php
 
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+  http_response_code(403);
+  exit('Forbidden');
+}
+
 return [
   // one level above subfolders like single_mission/, multi_mission/, etc.
   'base_dir' => '/cpnet/altimetry/landice/ais_cci_plus_phase2/products',
