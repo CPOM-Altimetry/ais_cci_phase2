@@ -1,4 +1,16 @@
 <?php
+@mkdir(__DIR__ . '/data', 0775, true);
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/data/php_error.log');
+error_reporting(E_ALL);
+
+/* EARLY DEBUG */
+if (isset($_GET['probe'])) {
+  header('Content-Type: text/plain'); 
+  echo "fetch.php probe reached\n";
+  exit;
+}
+
 /* PHP 5.x–compatible download proxy with CSV logging + debug mode */
 mb_internal_encoding('UTF-8');
 
