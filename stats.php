@@ -87,7 +87,7 @@ $whereSql = $where ? ('WHERE '.implode(' AND ',$where)) : '';
 </head>
 <body>
 <div class="wrap">
-  <h2>Download Statistics</h2>
+  <h2>AIS CCI+ Phase-2 Download Statistics</h2>
 
   <?php if (!$enabled): ?>
     <div class="warn"><strong>Statistics disabled.</strong> Set <code>enable_db = true</code> in <code>config/downloads.php</code>.</div>
