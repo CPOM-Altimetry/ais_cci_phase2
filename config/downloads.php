@@ -1,5 +1,4 @@
 <?php
-defined('AIS_CCI_APP') || exit;
 
 return [
   // one level above subfolders like single_mission/, multi_mission/, etc.
