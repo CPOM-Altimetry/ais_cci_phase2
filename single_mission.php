@@ -106,7 +106,7 @@
                                 <div class="w3-container">
                                     <div class="date1">Sentinel-3B <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3b">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3b&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="S3B">
                                 </a>
                             </div>
