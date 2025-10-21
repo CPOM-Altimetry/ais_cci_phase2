@@ -17,6 +17,10 @@ return [
       'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-CS2-5KM-20100927-20241203-fv2.nc',
       'label' => 'CryoSat-2 SEC fv2 (5km)',
     ],
+    'ev_fv2' => [
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ENV-5KM-20020909-20120409-fv2.nc',
+      'label' => 'ENVISAT SEC fv2 (5km)',
+    ],
     // add more ids here...
   ],
 
