@@ -48,7 +48,7 @@
                             <?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
                         </button>
                         <div class="w3-dropdown-content w3-bar-block w3-card-4">
-                            <?php $base = "index.php?show_single_mission=1&single_mission_view=" . urlencode($single_mission_view); ?>
+                            <?php $base = "index.php?show_single_mission=1&active_tab=single_mission&single_mission_view=" . urlencode($single_mission_view); ?>
                             <a href="<?php echo $base; ?>&ql_param=sec"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</a>
                             <a href="<?php echo $base; ?>&ql_param=sec_uncertainty" class="w3-bar-item w3-button">Uncertainty of SEC</a>
                             <a href="<?php echo $base; ?>&ql_param=surface_type"    class="w3-bar-item w3-button">Surface Type</a>
@@ -131,7 +131,7 @@
                                 <div class="w3-container">
                                     <div class="date1">Sentinel-3A <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3a">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3a&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="S3A">
                                 </a>
                             </div>
@@ -156,7 +156,7 @@
                                 <div class="w3-container">
                                     <div class="date1">CryoSat-2 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=cs2">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=cs2&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="CS2">
                                 </a>
                             </div>
@@ -181,7 +181,7 @@
                                 <div class="w3-container">
                                     <div class="date1">ENVISAT <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=ev">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=ev&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ENVISAT">
                                 </a>
                             </div>
@@ -206,7 +206,7 @@
                                 <div class="w3-container">
                                     <div class="date1">ERS-2 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e2">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e2&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ERS-2">
                                 </a>
                             </div>
@@ -231,7 +231,7 @@
                                 <div class="w3-container">
                                     <div class="date1">ERS-1 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
-                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e1">
+                                <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e1&active_tab=single_mission">
                                     <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ERS-1">
                                 </a>
                             </div>
@@ -252,7 +252,7 @@
                             $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.png")[0] ?? '';
                         }
                         ?>
-                        <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=all">
+                        <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=all&active_tab=single_mission">
                             <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="Large mission quicklook">
                         </a>
                         <div class="w3-container">   
