@@ -20,17 +20,21 @@ foreach ($products as $id => $meta) {
     $rel   = $meta['file']  ?? '';
     $label = $meta['label'] ?? basename($rel);
     $abs   = $baseDir . '/' . $rel;
-
+    $mission = $meta['mission'] ?? '';
+    $grid_size = $meta['grid_size'] ?? '';
     $exists = is_file($abs) && is_readable($abs);
     $sizeText = $exists ? format_bytes(filesize($abs)) : '—';
     $mtime    = $exists ? date('Y-m-d', filemtime($abs)) : '—';
 
     $rows[] = [
+        'file'   => $rel,
         'id'     => $id,
         'label'  => $label,
         'exists' => $exists,
         'size'   => $sizeText,
         'mtime'  => $mtime,
+        'mission' => $mission,
+        'grid_size' => $grid_size,
     ];
 }
 
@@ -59,23 +63,27 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 <table class="downloads">
   <thead>
     <tr>
-      <th>Product</th>
-      <th style="width:140px">Size</th>
-      <th style="width:140px">Updated</th>
-      <th style="width:160px">Action</th>
+      <th style="width:10%">Mission</th>
+      <th style="width:10%">Grid Size</th>
+      <th style="width:10%">Size</th>
+      <th style="width: 50%">File</th>
+      <th style="width:15%">Updated</th>
+      <th style="width:5%">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php foreach ($rows as $r): ?>
       <tr>
-        <td><?php echo h($r['label']); ?></td>
+         <td><?php echo h($r['mission']); ?></td>
+         <td><?php echo h($r['grid_size']); ?></td>
         <td><?php echo h($r['size']); ?></td>
+        <td><?php echo h(basename($r['file'])); ?></td>
         <td class="muted"><?php echo h($r['mtime']); ?></td>
         <td>
           <?php if ($r['exists']): ?>
             <a class="download-btn" href="fetch.php?id=<?php echo urlencode($r['id']); ?>">
               <span class="material-icons" aria-hidden="true">download</span>
-              Download
+              
             </a>
           <?php else: ?>
             <span class="unavail">Unavailable</span>
