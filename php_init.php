@@ -11,11 +11,6 @@
 date_default_timezone_set("Europe/London");
 session_start();
 
-// If session says we’re on ICESat-2 (or anything not single_mission), ignore a stale GET flag
-if (!empty($_SESSION['active_tab']) && $_SESSION['active_tab'] !== 'single_mission') {
-    unset($_GET['show_single_mission']);
-}
-
 
 // ---------------------------------------------------------------------------
 // HILLSHADE TOGGLE (SESSION + POST ONLY)
@@ -27,21 +22,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['hillshade'])) {
 $hillshade = $_SESSION['hillshade'] ?? 'show'; // default ON
 
 // ---------------------------------------------------------------------------
-// ACTIVE TAB MEMORY (SESSION + POST)
+// ACTIVE TAB MEMORY (SESSION + POST/GET)
 // Allowed tabs: intro, single_mission, is2_sec, multi_mission, annual_dh
+// Precedence: POST > GET > inferred-from-URL > session > 'intro'
 // ---------------------------------------------------------------------------
 $allowed_tabs = ['intro', 'single_mission', 'is2_sec', 'multi_mission', 'annual_dh'];
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['active_tab'])) {
-    $posted_tab = $_POST['active_tab'];
-    if (in_array($posted_tab, $allowed_tabs, true)) {
-        $_SESSION['active_tab'] = $posted_tab;
-    }
+
+// start from session or default
+$active_tab = $_SESSION['active_tab'] ?? 'intro';
+
+// 1) Explicit POST wins
+if (isset($_POST['active_tab']) && in_array($_POST['active_tab'], $allowed_tabs, true)) {
+    $active_tab = $_POST['active_tab'];
 }
-if (isset($_GET['active_tab'])) {
-    $_SESSION['active_tab'] = $_GET['active_tab'];
-} else {
-    $active_tab = $_SESSION['active_tab'] ?? 'intro';
+// 2) Else explicit GET wins
+elseif (isset($_GET['active_tab']) && in_array($_GET['active_tab'], $allowed_tabs, true)) {
+    $active_tab = $_GET['active_tab'];
 }
+// 3) Else infer from URL if it clearly targets the Single Mission page
+elseif (
+    (isset($_GET['show_single_mission']) && $_GET['show_single_mission'] == '1') ||
+    isset($_GET['single_mission_view']) ||
+    (isset($_GET['sec_type']) && $_GET['sec_type'] === 'single_mission')
+) {
+    $active_tab = 'single_mission';
+}
+
+// persist the final choice
+$_SESSION['active_tab'] = $active_tab;
+
 
 // ---------------------------------------------------------------------------
 // SHOW_SINGLE_MISSION (GET/POST preserved)
