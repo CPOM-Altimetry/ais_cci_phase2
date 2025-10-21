@@ -83,40 +83,42 @@
 <!-- Javascript -->
 <script>
     function openTab(evt, cityName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-        document.getElementById(cityName).style.display = "block";
-        if (evt && evt.currentTarget) {
-            evt.currentTarget.className += " active";
-        } else {
-            var btn = document.querySelector('.tab button[onclick*="' + cityName + '"]');
-            if (btn) btn.className += " active";
-        }
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+    document.getElementById(cityName).style.display = "block";
+    if (evt && evt.currentTarget) {
+      evt.currentTarget.className += " active";
+    } else {
+      var btn = document.querySelector('.tab button[onclick*="' + cityName + '"]');
+      if (btn) btn.className += " active";
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Always prefer the server-side session memory
+    var activeTabFromPHP = "<?php echo $active_tab; ?>";
+    var btn = document.querySelector(".tab button[onclick*=\"'" + activeTabFromPHP + "'\"]");
+    if (btn) {
+      btn.click();
+    } else {
+      var def = document.getElementById("defaultOpen");
+      if (def) def.click();
     }
 
-    // Restore tab on load:
-    // If URL has show_single_mission=1, force 'single_mission'; else use session's $active_tab; else defaultOpen.
-    document.addEventListener('DOMContentLoaded', function() {
-        var params = new URLSearchParams(window.location.search);
-        var urlWantsSingle = params.get('show_single_mission') === '1';
-        var activeTabFromPHP = "<?php echo $active_tab; ?>";
-        var target = urlWantsSingle ? 'single_mission' : activeTabFromPHP;
-
-        var btn = document.querySelector(".tab button[onclick*=\"'" + target + "'\"]");
-        if (btn) {
-            btn.click();
-        } else {
-            var def = document.getElementById("defaultOpen");
-            if (def) def.click();
+    // If we're NOT on single_mission, clean up any stale show_single_mission=1 in the URL
+    if (activeTabFromPHP !== 'single_mission') {
+      try {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('show_single_mission')) {
+          url.searchParams.delete('show_single_mission');
+          window.history.replaceState({}, "", url.toString());
         }
-    });
+      } catch(e) {}
+    }
+  });
 
     // Hillshade POST submit with tab memory
     const toggle = document.getElementById('toggle-hillshade');

@@ -11,6 +11,12 @@
 date_default_timezone_set("Europe/London");
 session_start();
 
+// If session says we’re on ICESat-2 (or anything not single_mission), ignore a stale GET flag
+if (!empty($_SESSION['active_tab']) && $_SESSION['active_tab'] !== 'single_mission') {
+    unset($_GET['show_single_mission']);
+}
+
+
 // ---------------------------------------------------------------------------
 // HILLSHADE TOGGLE (SESSION + POST ONLY)
 // ---------------------------------------------------------------------------

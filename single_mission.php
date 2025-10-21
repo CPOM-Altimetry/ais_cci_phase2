@@ -25,6 +25,9 @@
                     <form id="hillshade-form" method="POST" style="display:none;">
                         <input type="hidden" name="hillshade" id="hillshade-input">
                         <input type="hidden" name="active_tab" id="active_tab_input">
+                        <input type="hidden" name="show_single_mission" value="1">
+                        <input type="hidden" name="single_mission_view" value="<?php echo htmlspecialchars($single_mission_view, ENT_QUOTES); ?>">
+                        <input type="hidden" name="ql_param" value="<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>">
                     </form>
 
                     <label class="switch">
