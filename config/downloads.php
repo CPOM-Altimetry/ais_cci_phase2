@@ -14,13 +14,13 @@ return [
 
   'products' => [
     's3b_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-S3B-5KM-20100927-20241203-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-S3B-5KM-20181220-20250914-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'Sentinel-3B',
       'grid_size' => '5km',
     ],
     's3a_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-S3A-5KM-20100927-20241203-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-S3A-5KM-20161115-20250909-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'Sentinel-3A',
       'grid_size' => '5km',
@@ -44,7 +44,7 @@ return [
       'grid_size' => '5km',
     ],
     'e1_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER1-5KM-20020909-20120409-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER1-5KM-19910730-19960723-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'ERS-1',
       'grid_size' => '5km',
