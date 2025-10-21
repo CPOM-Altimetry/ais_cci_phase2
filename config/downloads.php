@@ -38,7 +38,7 @@ return [
       'grid_size' => '5km',
     ],
     'e2_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER2-5KM-20020909-20120409-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER2-5KM-19950529-20030616-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'ERS-2',
       'grid_size' => '5km',
