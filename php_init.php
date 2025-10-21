@@ -37,7 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['active_tab'])) {
         $_SESSION['active_tab'] = $posted_tab;
     }
 }
-$active_tab = $_SESSION['active_tab'] ?? 'intro';
+if (isset($_GET['active_tab'])) {
+    $_SESSION['active_tab'] = $_GET['active_tab'];
+} else {
+    $active_tab = $_SESSION['active_tab'] ?? 'intro';
+}
 
 // ---------------------------------------------------------------------------
 // SHOW_SINGLE_MISSION (GET/POST preserved)
