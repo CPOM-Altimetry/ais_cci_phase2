@@ -160,6 +160,35 @@ if (missionSelect) {
     document.getElementById('mission-select-form').submit();
   });
 }
+
+const loadedTabs = new Set(['<?php echo $active_tab; ?>']);
+
+function openTab(evt, tabId) {
+  // your existing show/hide code here
+  var i, tabcontent=document.getElementsByClassName("tabcontent"), tablinks=document.getElementsByClassName("tablinks");
+  for (i=0;i<tabcontent.length;i++) tabcontent[i].style.display="none";
+  for (i=0;i<tablinks.length;i++) tablinks[i].className = tablinks[i].className.replace(" active","");
+  document.getElementById(tabId).style.display="block";
+  if (evt && evt.currentTarget) evt.currentTarget.className += " active";
+
+  // lazy-load this tab's HTML the first time
+  if (!loadedTabs.has(tabId)) {
+    const pane = document.getElementById(tabId);
+    pane.innerHTML = '<div style="padding:16px;color:#666;">Loading…</div>';
+    const params = new URLSearchParams({
+      active_tab: tabId,
+      ql_param: '<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>',
+      hillshade: '<?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?>',
+      single_mission_view: '<?php echo htmlspecialchars($single_mission_view, ENT_QUOTES); ?>'
+    });
+    fetch('tab_router.php?' + params.toString(), { credentials:'same-origin' })
+      .then(r => r.text())
+      .then(html => { pane.innerHTML = html; loadedTabs.add(tabId); })
+      .catch(e => { pane.innerHTML = '<div style="padding:16px;color:#b00;">Failed to load tab.</div>'; console.error(e); });
+  }
+}
+
+
 </script>
 
 </html>
