@@ -196,7 +196,7 @@ $whereSql = $where ? ('WHERE '.implode(' AND ',$where)) : '';
     </form>
 
     <div class="grid">
-      <div class="card">
+      <div class="card countries">
         <h4>Summary</h4>
         <div class="body">
           <div><strong>Total downloads:</strong> <?php echo number_format((int)$totalCnt); ?></div>
