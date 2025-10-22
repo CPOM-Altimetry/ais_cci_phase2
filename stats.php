@@ -213,7 +213,7 @@ $whereSql = $where ? ('WHERE '.implode(' AND ',$where)) : '';
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" style="width: 60%;">
         <h4>Top Countries</h4>
         <div class="body">
           <?php if (!$byCountry): ?>
