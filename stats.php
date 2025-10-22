@@ -82,6 +82,8 @@ $whereSql = $where ? ('WHERE '.implode(' AND ',$where)) : '';
     .warn{background:#fff7f0;border:1px solid #ffc391;padding:10px;border-radius:6px}
     .ok{background:#f3fff4;border:1px solid #bfe6c2;padding:10px;border-radius:6px}
     .badge{display:inline-block;border:1px solid #ddd;border-radius:12px;padding:2px 8px;font-size:12px;background:#f7f7f7}
+    /* Make the Top Countries card full width */
+    .card.countries{ grid-column: 1 / -1; }
     @media (max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
@@ -213,7 +215,7 @@ $whereSql = $where ? ('WHERE '.implode(' AND ',$where)) : '';
         </div>
       </div>
 
-      <div class="card" style="width: 60%;">
+      <div class="card countries">
         <h4>Top Countries</h4>
         <div class="body">
           <?php if (!$byCountry): ?>
