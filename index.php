@@ -83,112 +83,142 @@
 
 <!-- Javascript -->
 <script>
-    function openTab(evt, cityName) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
-    document.getElementById(cityName).style.display = "block";
-    if (evt && evt.currentTarget) {
-      evt.currentTarget.className += " active";
-    } else {
-      var btn = document.querySelector('.tab button[onclick*="' + cityName + '"]');
-      if (btn) btn.className += " active";
-    }
+/* ===== Config from PHP (for initial fetch params) ===== */
+const TAB_DEFAULTS = {
+  active:  "<?php echo $active_tab; ?>",
+  qlParam: "<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>",
+  shade:   "<?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?>",
+  view:    "<?php echo htmlspecialchars($single_mission_view, ENT_QUOTES); ?>"
+};
+
+/* ===== Helpers ===== */
+function showTabUI(evt, tabId) {
+  var i, tabcontent = document.getElementsByClassName("tabcontent"),
+         tablinks   = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
+  for (i = 0; i < tablinks.length;   i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+  var pane = document.getElementById(tabId);
+  if (pane) pane.style.display = "block";
+  if (evt && evt.currentTarget) {
+    evt.currentTarget.className += " active";
+  } else {
+    var btn = document.querySelector('.tab button[onclick*="' + tabId + '"]');
+    if (btn) btn.className += " active";
   }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    // Always prefer the server-side session memory
-    var activeTabFromPHP = "<?php echo $active_tab; ?>";
-    var btn = document.querySelector(".tab button[onclick*=\"'" + activeTabFromPHP + "'\"]");
-    if (btn) {
-      btn.click();
-    } else {
-      var def = document.getElementById("defaultOpen");
-      if (def) def.click();
-    }
-
-    // If we're NOT on single_mission, clean up any stale show_single_mission=1 in the URL
-    if (activeTabFromPHP !== 'single_mission') {
-      try {
-        var url = new URL(window.location.href);
-        if (url.searchParams.has('show_single_mission')) {
-          url.searchParams.delete('show_single_mission');
-          window.history.replaceState({}, "", url.toString());
-        }
-      } catch(e) {}
-    }
-  });
-
-    // Hillshade POST submit with tab memory
-    const toggle = document.getElementById('toggle-hillshade');
-    if (toggle) {
-        toggle.addEventListener('change', function() {
-            const inputHill = document.getElementById('hillshade-input');
-            const inputTab  = document.getElementById('active_tab_input');
-            const form      = document.getElementById('hillshade-form');
-
-            let tabId = 'intro';
-            const activeBtn = document.querySelector('.tablinks.active');
-            if (activeBtn) {
-                const m = activeBtn.getAttribute('onclick').match(/'([^']+)'/);
-                if (m && m[1]) tabId = m[1];
-            } else {
-                const visible = Array.from(document.querySelectorAll('.tabcontent'))
-                    .find(el => el.style.display === 'block');
-                if (visible && visible.id) tabId = visible.id;
-            }
-
-            inputHill.value = this.checked ? 'show' : 'hide';
-            inputTab.value  = tabId;
-            form.submit();
-        });
-    }
-
-    // Auto-submit when a mission radio is picked
-    const missionForm = document.getElementById('mission-radio-form');
-    if (missionForm) {
-        missionForm.addEventListener('change', function () {
-            this.submit(); // POSTs: single_mission_view, ql_param, show_single_mission, active_tab
-        });
-    }
-    // Auto-submit when a mission is chosen from the dropdown
-const missionSelect = document.getElementById('mission-select');
-if (missionSelect) {
-  missionSelect.addEventListener('change', function () {
-    document.getElementById('mission-select-form').submit();
-  });
 }
 
-const loadedTabs = new Set(['<?php echo $active_tab; ?>']);
+function paneIsLoaded(pane){
+  if (!pane) return false;
+  if (pane.dataset && pane.dataset.loaded === "1") return true;
+  // If server rendered content is already there, also treat as loaded:
+  return (pane.innerHTML && pane.innerHTML.trim().length > 10);
+}
 
-function openTab(evt, tabId) {
-  // your existing show/hide code here
-  var i, tabcontent=document.getElementsByClassName("tabcontent"), tablinks=document.getElementsByClassName("tablinks");
-  for (i=0;i<tabcontent.length;i++) tabcontent[i].style.display="none";
-  for (i=0;i<tablinks.length;i++) tablinks[i].className = tablinks[i].className.replace(" active","");
-  document.getElementById(tabId).style.display="block";
-  if (evt && evt.currentTarget) evt.currentTarget.className += " active";
+function markPaneLoaded(pane){
+  if (pane && pane.dataset) pane.dataset.loaded = "1";
+}
 
-  // lazy-load this tab's HTML the first time
-  if (!loadedTabs.has(tabId)) {
-    const pane = document.getElementById(tabId);
-    pane.innerHTML = '<div style="padding:16px;color:#666;">Loading…</div>';
-    const params = new URLSearchParams({
-      active_tab: tabId,
-      ql_param: '<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>',
-      hillshade: '<?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?>',
-      single_mission_view: '<?php echo htmlspecialchars($single_mission_view, ENT_QUOTES); ?>'
+/* Bind listeners that the tab’s HTML expects (works for both SSR and lazy) */
+function initTabBehaviors(tabId){
+  const pane = document.getElementById(tabId);
+  if (!pane) return;
+
+  // Hillshade (supports both generic ids and IS2-specific ids)
+  const toggle = pane.querySelector('#is2-toggle-hillshade, #toggle-hillshade');
+  if (toggle && !toggle.dataset.bound) {
+    toggle.addEventListener('change', function(){
+      // Find matching form + hidden input inside this pane
+      const form   = pane.querySelector('#is2-hillshade-form, #hillshade-form');
+      const hidden = pane.querySelector('#is2-hillshade-input, #hillshade-input');
+      if (!form || !hidden) return;
+      hidden.value = this.checked ? 'show' : 'hide';
+      form.submit(); // full POST (server keeps us on the right tab via hidden active_tab)
     });
-    fetch('tab_router.php?' + params.toString(), { credentials:'same-origin' })
-      .then(r => r.text())
-      .then(html => { pane.innerHTML = html; loadedTabs.add(tabId); })
-      .catch(e => { pane.innerHTML = '<div style="padding:16px;color:#b00;">Failed to load tab.</div>'; console.error(e); });
+    toggle.dataset.bound = "1";
+  }
+
+  // Mission dropdown (if present)
+  const missionSel  = pane.querySelector('#mission-select');
+  const missionForm = pane.querySelector('#mission-select-form, #mission-radio-form');
+  if (missionSel && missionForm && !missionSel.dataset.bound) {
+    missionSel.addEventListener('change', function(){ missionForm.submit(); });
+    missionSel.dataset.bound = "1";
   }
 }
 
+/* ===== Lazy loader ===== */
+const loadedTabs = new Set(); // track tabs fetched via AJAX
 
+function fetchTabHtml(tabId){
+  const pane = document.getElementById(tabId);
+  if (!pane) return Promise.resolve();
+
+  // Loading placeholder
+  pane.innerHTML = '<div style="padding:16px;color:#666;">Loading…</div>';
+
+  // Pass along state; server also has session, but this helps first paint
+  const params = new URLSearchParams({
+    active_tab: tabId,
+    ql_param:   TAB_DEFAULTS.qlParam,
+    hillshade:  TAB_DEFAULTS.shade,
+    single_mission_view: TAB_DEFAULTS.view
+  });
+
+  return fetch('tab_router.php?' + params.toString(), { credentials: 'same-origin' })
+    .then(r => r.text())
+    .then(html => {
+      pane.innerHTML = html;
+      markPaneLoaded(pane);
+      loadedTabs.add(tabId);
+      initTabBehaviors(tabId);
+    })
+    .catch(err => {
+      console.error(err);
+      pane.innerHTML = '<div style="padding:16px;color:#b00;">Failed to load tab.</div>';
+    });
+}
+
+/* ===== Public: openTab (click handler on buttons) ===== */
+function openTab(evt, tabId) {
+  showTabUI(evt, tabId);
+
+  const pane = document.getElementById(tabId);
+  // If already loaded (SSR or previously fetched), just (re)bind and return
+  if (paneIsLoaded(pane)) {
+    initTabBehaviors(tabId);
+    return;
+  }
+
+  // Otherwise, lazy fetch then bind
+  fetchTabHtml(tabId);
+}
+
+/* ===== Initial boot ===== */
+document.addEventListener('DOMContentLoaded', function () {
+  // Prefer server-side remembered tab
+  var tabId = TAB_DEFAULTS.active || 'intro';
+
+  // If we’re not on single_mission, clean up stale show_single_mission=1 in URL (cosmetic)
+  if (tabId !== 'single_mission') {
+    try {
+      var url = new URL(window.location.href);
+      if (url.searchParams.has('show_single_mission')) {
+        url.searchParams.delete('show_single_mission');
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch(e) {}
+  }
+
+  // Show the tab, then lazy-load only if the pane is empty
+  showTabUI(null, tabId);
+  const pane = document.getElementById(tabId);
+  if (!paneIsLoaded(pane)) {
+    fetchTabHtml(tabId);
+  } else {
+    initTabBehaviors(tabId);
+  }
+});
 </script>
+
 
 </html>

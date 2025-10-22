@@ -1,15 +1,11 @@
 <?php
 // is2_sec.php — ICESat-2 tab (single large image)
-// Expects $hillshade and $ql_param from php_init.php
-
-$mission_str = 'IS2'; // adjust if your IS2 prefix differs
-
+$mission_str = 'IS2';
 $pattern = ($hillshade === 'show')
     ? "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.png"
     : "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.png";
-
-$matches   = glob($pattern);
-$imagefile = $matches[0] ?? '';
+$files = glob($pattern);
+$imagefile = $files[0] ?? '';
 
 $date_txt = '';
 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
@@ -21,10 +17,7 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
 <h3>ICESat-2 SEC</h3>
 
 <style>
-  .float-right-img{
-    float:right; position:relative; top:-60px;
-    max-width:100px; width:100%; height:auto;
-  }
+  .float-right-img{ float:right; position:relative; top:-60px; max-width:100px; width:100%; height:auto; }
   @media (max-width:600px){ .float-right-img{ float:none; margin:10px 0; } }
 </style>
 
@@ -35,31 +28,29 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
   The change is calculated within each 5&nbsp;km grid cell.
 </p>
 
-<!-- ===================== Toolbar (parameter dropdown + hillshade) ===================== -->
+<!-- ===================== Toolbar ===================== -->
 <div class="image_section">
-
-  <!-- Right: Hill Shade toggle (POSTs hillshade + active_tab=is2_sec) -->
+  <!-- Right: Hill Shade toggle (POSTs & stays on this tab) -->
   <div class="toggle-container-left">
     <div class="toggle-label">Hill Shade</div>
     <div class="toggle-switch<?php echo $hillshade === 'show' ? ' on' : ''; ?>">
       <span class="toggle-option">hide</span>
 
-      <!-- Make IDs UNIQUE to this tab -->
-      <form id="hillshade-form-is2" method="POST" style="display:none;">
-        <input type="hidden" name="hillshade" id="hillshade-input-is2">
+      <form id="is2-hillshade-form" method="POST" style="display:none;">
+        <input type="hidden" name="hillshade" id="is2-hillshade-input">
         <input type="hidden" name="active_tab" value="is2_sec">
         <input type="hidden" name="ql_param" value="<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>">
       </form>
 
       <label class="switch">
-        <input id="toggle-hillshade-is2" type="checkbox" <?php echo $hillshade === 'show' ? 'checked' : ''; ?>>
+        <input id="is2-toggle-hillshade" type="checkbox" <?php echo $hillshade === 'show' ? 'checked' : ''; ?>>
         <span class="slider round"></span>
       </label>
       <span class="toggle-option tog_to_hide">show</span>
     </div>
   </div>
 
-  <!-- Left: Parameter dropdown (POST so we stay on the ICESat-2 tab) -->
+  <!-- Left: Parameter dropdown (POST to stay on IS2 tab) -->
   <div class="w3-container">
     <div class="control-row">
       <div id="product_dropdown" class="w3-dropdown-hover">
@@ -83,7 +74,7 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
 </div>
 <!-- ===================== /Toolbar ===================== -->
 
-<!-- ===================== Large ICESat-2 image ===================== -->
+<!-- ===================== Large image ===================== -->
 <div class="images-wrap2">
   <div class="w3-container">
     <div class="w3-card">
@@ -94,29 +85,11 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
         </div>
       <?php else: ?>
         <div style="padding:16px;">
-          <p style="margin:0; color:#b00;"><strong>No quicklook image found</strong> for parameter
-            <code><?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?></code> (hillshade:
-            <code><?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?></code>).</p>
-          <p style="margin:.5em 0 0; color:#555; font-size:.95em;">Looked for:
-            <code><?php echo htmlspecialchars($pattern, ENT_QUOTES); ?></code></p>
+          <p style="margin:0; color:#b00;"><strong>No quicklook image found</strong> for parameter <code><?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?></code> (hillshade: <code><?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?></code>).</p>
+          <p style="margin:.5em 0 0; color:#555; font-size:.95em;">Looked for: <code><?php echo htmlspecialchars($pattern, ENT_QUOTES); ?></code></p>
         </div>
       <?php endif; ?>
     </div>
   </div>
 </div>
-<!-- ===================== /Large ICESat-2 image ===================== -->
-
-<script>
-// Bind to the ICESat-2 toggle ONLY (unique ID), then POST with active_tab=is2_sec
-(function(){
-  var toggle = document.getElementById('toggle-hillshade-is2');
-  if (!toggle) return;
-  toggle.addEventListener('change', function(){
-    var inp = document.getElementById('hillshade-input-is2');
-    var form = document.getElementById('hillshade-form-is2');
-    if (!inp || !form) return;
-    inp.value = this.checked ? 'show' : 'hide';
-    form.submit();
-  });
-})();
-</script>
+<!-- ===================== /Large image ===================== -->
