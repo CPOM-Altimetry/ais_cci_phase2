@@ -53,28 +53,29 @@
         </button>
     </div>
 
+    <!-- Tab panes -->
     <div id="intro" class="tabcontent tabcontent-intro">
-        <?php include __DIR__ . '/intro.php'; ?>
+    <?php if ($active_tab === 'intro') include __DIR__.'/intro.php'; ?>
     </div>
 
     <div id="single_mission" class="tabcontent">
-        <?php include __DIR__ . '/single_mission.php'; ?>
+    <?php if ($active_tab === 'single_mission') include __DIR__.'/single_mission.php'; ?>
     </div>
 
     <div id="is2_sec" class="tabcontent">
-        <?php include __DIR__ . '/is2_sec.php'; ?> 
+    <?php if ($active_tab === 'is2_sec') include __DIR__.'/is2_sec.php'; ?>
     </div>
 
     <div id="multi_mission" class="tabcontent">
-        <?php include __DIR__ . '/multi_mission.php'; ?>
+    <?php if ($active_tab === 'multi_mission') include __DIR__.'/multi_mission.php'; ?>
     </div>
 
     <div id="annual_dh" class="tabcontent">
-        <?php include __DIR__ . '/annual_dh.php'; ?>
+    <?php if ($active_tab === 'annual_dh') include __DIR__.'/annual_dh.php'; ?>
     </div>
 
     <div id="download" class="tabcontent">
-        <?php include __DIR__ . '/download.php'; ?>
+    <?php if ($active_tab === 'download') include __DIR__.'/download.php'; ?>
     </div>
     
     <!-- Page content goes here -->
