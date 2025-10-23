@@ -45,7 +45,7 @@
                     <div id="product_dropdown" class="w3-dropdown-hover">
                         <span id="parameter_txt">Parameter:</span>
                         <button class="w3-button my-button-color">
-                            <?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
+                            <?php echo htmlspecialchars($ql_param_str, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
                         </button>
                         <div class="w3-dropdown-content w3-bar-block w3-card-4">
                             <?php $base = "index.php?show_single_mission=1&active_tab=single_mission&single_mission_view=" . urlencode($single_mission_view); ?>

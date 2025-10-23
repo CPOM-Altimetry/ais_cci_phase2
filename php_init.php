@@ -83,6 +83,12 @@ if (!in_array($ql_param, $all_ql_params, true)) {
     $ql_param = $all_ql_params[0];
 }
 
+$ql_param_str = "Surface Elevation Change";
+if ($ql_param == 'sec_uncertainty') $ql_param_str = 'Uncertainty of SEC';
+if ($ql_param == 'surface_type') $ql_param_str = 'Surface Type';
+if ($ql_param == 'basin_id') $ql_param_str = 'Glaciological Basin ID';
+
+
 // ---------------------------------------------------------------------------
 // SINGLE MISSION VIEW: 'all','s3a','s3b','cs2','ev','e2','e1'
 // ---------------------------------------------------------------------------

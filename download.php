@@ -43,7 +43,14 @@ foreach ($products as $id => $meta) {
 usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 
 ?>
-<h3>Single Radar Altimetry Mission SEC Downloads</h3>
+<h3>Dataset Citation</h3>
+<p>This dataset is citable as:  
+    Shepherd, A., Gilbert, L., Muir, A. S., Konrad, H., McMillan, M., Slater, T ., et al. (2019). Trends in Antarctic Ice
+Sheet elevation and mass. Geophysical Research Letters, 46, 8174–8183.
+https://doi.org/10.1029/2019GL082182."</p>
+<h3>Version Details</h3>
+<p>...</p>
+<h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 <style>
   /* Light table cosmetics (can move to main.css if you prefer) */
   table.downloads{ width:100%; border-collapse:collapse; margin:10px 0 18px; }
@@ -127,7 +134,7 @@ foreach ($products as $id => $meta) {
 usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 ?>
 
-<h3>Single Laser Altimetry Mission SEC Downloads</h3>
+<h3>Laser Altimetry Mission SEC Downloads</h3>
 
 <table class="downloads">
   <thead>
