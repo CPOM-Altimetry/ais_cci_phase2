@@ -49,10 +49,10 @@
                         </button>
                         <div class="w3-dropdown-content w3-bar-block w3-card-4">
                             <?php $base = "index.php?show_single_mission=1&active_tab=single_mission&single_mission_view=" . urlencode($single_mission_view); ?>
-                            <a href="<?php echo $base; ?>&ql_param=sec"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</a>
-                            <a href="<?php echo $base; ?>&ql_param=sec_uncertainty" class="w3-bar-item w3-button">Uncertainty of SEC</a>
-                            <a href="<?php echo $base; ?>&ql_param=surface_type"    class="w3-bar-item w3-button">Surface Type</a>
-                            <a href="<?php echo $base; ?>&ql_param=basin_id"        class="w3-bar-item w3-button">Glaciological Basin ID</a>
+                            <a href="<?php echo $base; ?>&ql_param=sec#tab_row"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</a>
+                            <a href="<?php echo $base; ?>&ql_param=sec_uncertainty#tab_row" class="w3-bar-item w3-button">Uncertainty of SEC</a>
+                            <a href="<?php echo $base; ?>&ql_param=surface_type#tab_row"    class="w3-bar-item w3-button">Surface Type</a>
+                            <a href="<?php echo $base; ?>&ql_param=basin_id#tab_row"        class="w3-bar-item w3-button">Glaciological Basin ID</a>
                         </div>
                     </div>
 
@@ -92,9 +92,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -107,7 +107,19 @@
                                     <div class="date1">Sentinel-3B <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3b&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="S3B">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="S3B"
+                                            style="width:100%;">
+                                    </picture> 
                                 </a>
                             </div>
                         </div>
@@ -117,9 +129,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -132,7 +144,19 @@
                                     <div class="date1">Sentinel-3A <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=s3a&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="S3A">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="S3A"
+                                            style="width:100%;">
+                                    </picture> 
                                 </a>
                             </div>
                         </div>
@@ -142,9 +166,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -157,7 +181,19 @@
                                     <div class="date1">CryoSat-2 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=cs2&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="CS2">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="CS2"
+                                            style="width:100%;">
+                                    </picture>                                   
                                 </a>
                             </div>
                         </div>
@@ -167,9 +203,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -182,7 +218,19 @@
                                     <div class="date1">ENVISAT <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=ev&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ENVISAT">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="ENVISAT"
+                                            style="width:100%;">
+                                    </picture>   
                                 </a>
                             </div>
                         </div>
@@ -192,9 +240,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -207,7 +255,19 @@
                                     <div class="date1">ERS-2 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e2&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ERS-2">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="ERS-2"
+                                            style="width:100%;">
+                                    </picture> 
                                 </a>
                             </div>
                         </div>
@@ -217,9 +277,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -232,7 +292,19 @@
                                     <div class="date1">ERS-1 <span class="date2">(<?php echo "{$start_month}-{$start_year} to {$end_month}-{$end_year}"; ?>)</span></div>
                                 </div>
                                 <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=e1&active_tab=single_mission">
-                                    <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ERS-1">
+                                    <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>
+                                    <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="ERS-1"
+                                            style="width:100%;">
+                                    </picture> 
                                 </a>
                             </div>
                         </div>
@@ -247,13 +319,25 @@
                     <div class="w3-card">
                         <?php 
                         if ($hillshade === 'show') {
-                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.png")[0] ?? '';
+                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
                         } else {
-                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.png")[0] ?? '';
+                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
                         }
                         ?>
                         <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=all&active_tab=single_mission">
-                            <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="Large mission quicklook">
+                                <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>    
+                                <picture style="width:100%;">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                                            type="image/avif">
+                                        <source
+                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            type="image/webp">
+                                        <img
+                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                                            alt="Large {$mission_str}"
+                                            style="width:100%;">
+                            </picture> 
                         </a>
                         <div class="w3-container">   
                             <div class="all-text image_card_text"><?php echo htmlspecialchars($mission_str ?: 'Mission', ENT_QUOTES); ?> <span class="date">(Dec-2018 to Apr-2021)</span></div>

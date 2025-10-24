@@ -14,7 +14,7 @@ function format_bytes($bytes){
     return sprintf(($i===0?'%d %s':'%.2f %s'), $bytes, $units[$i]);
 }
 
-// Build rows with computed metadata
+// Build rows with computed metadata for RA (Radar Altimetry)
 $rows = [];
 foreach ($products as $id => $meta) {
     if ($meta['instrument'] != 'RA') continue;
@@ -43,15 +43,36 @@ foreach ($products as $id => $meta) {
 usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 
 ?>
-<h3>Dataset Citation</h3>
-<p>This dataset is citable as:  
-    Shepherd, A., Gilbert, L., Muir, A. S., Konrad, H., McMillan, M., Slater, T ., et al. (2019). Trends in Antarctic Ice
-Sheet elevation and mass. Geophysical Research Letters, 46, 8174–8183.
-https://doi.org/10.1029/2019GL082182."</p>
-<h3>Version Details</h3>
-<p>...</p>
-<h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 <style>
+  /* NEW: Two-column layout for the metadata sections */
+  .citation {
+    background-color: #D4E4F1;
+    border-radius: 5px;
+    padding: 10px;
+    padding-top: 0px;
+  }
+  .version {
+    background-color: #fafafa;
+    border-radius: 5px;
+    padding: 10px;
+        padding-top: 0px;
+  }
+  .two-column-section {
+    display: flex;
+    gap: 30px; /* Space between the two columns */
+    margin-bottom: 25px; /* Space before the download table sections */
+  }
+  .column-item {
+    flex: 1; /* Ensures both items take up equal width */
+  }
+  /* Stack the columns vertically on smaller screens (less than 768px wide) */
+  @media (max-width: 768px) {
+    .two-column-section {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+
   /* Light table cosmetics (can move to main.css if you prefer) */
   table.downloads{ width:100%; border-collapse:collapse; margin:10px 0 18px; }
   table.downloads th, table.downloads td{ padding:10px; border-bottom:1px solid #eee; text-align:left; }
@@ -60,11 +81,62 @@ https://doi.org/10.1029/2019GL082182."</p>
     display:inline-flex; align-items:center; gap:8px;
     background:#21578b; color:#fff; padding:8px 12px;
     border-radius:6px; text-decoration:none;
+    /* Ensuring the button is always visible */
+    white-space: nowrap;
   }
   .download-btn .material-icons{ font-size:20px; line-height:1; }
   .muted{ color:#777; }
   .unavail{ color:#a00; font-weight:600; }
+
+  /* NEW: Style for the small version details table */
+  table.version-details {
+    width: auto; /* Keeps the table compact */
+    border-collapse: collapse;
+    margin-top: 5px;
+  }
+  table.version-details td {
+    padding: 5px 10px 5px 0; /* Increased vertical padding */
+    border-bottom: 1px solid #eee; /* Added light grey bottom border */
+    text-align: left;
+  }
+  /* Remove border on the last row for cleanliness */
+  table.version-details tr:last-child td {
+    border-bottom: none;
+  }
 </style>
+
+<!-- Start of the new two-column section -->
+<div class="two-column-section">
+  <div class="column-item citation">
+    <h4>Dataset Citation</h4>
+    <p>This dataset is citable as:  
+        Shepherd, A., Gilbert, L., Muir, A. S., Konrad, H., McMillan, M., Slater, T ., et al. (2019). Trends in Antarctic Ice
+        Sheet elevation and mass. Geophysical Research Letters, 46, 8174–8183.
+        https://doi.org/10.1029/2019GL082182."</p>
+  </div>
+  <div class="column-item version">
+    <h4>Version Details</h4>
+    <table class="version-details">
+      <tr>
+        <td style="font-weight: 600;">Project:</td>
+        <td>Antarctic CCI+ Phase-2</td>
+      </tr>
+      <tr>
+        <td style="font-weight: 600;">Release:</td>
+        <td>1 (Nov 2025)</td>
+      </tr>
+      
+      <tr>
+        <td style="font-weight: 600;">Update Frequency:</td>
+        <td>Monthly (note that single mission products from missions that have ended do not change between releases)</td>
+
+      </tr>
+    </table>
+  </div>
+</div>
+<!-- End of the new two-column section -->
+
+<h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 
 <table class="downloads">
   <thead>
@@ -89,7 +161,6 @@ https://doi.org/10.1029/2019GL082182."</p>
           <?php if ($r['exists']): ?>
             <a class="download-btn" href="fetch.php?id=<?php echo urlencode($r['id']); ?>">
               <span class="material-icons" aria-hidden="true">download</span>
-              
             </a>
           <?php else: ?>
             <span class="unavail">Unavailable</span>
@@ -105,7 +176,7 @@ https://doi.org/10.1029/2019GL082182."</p>
 <?php endif; ?>
 
 <?php
-// Build rows with computed metadata
+// Build rows with computed metadata for LA (Laser Altimetry)
 $rows = [];
 foreach ($products as $id => $meta) {
     if ($meta['instrument'] != 'LA') continue;
@@ -159,7 +230,6 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
           <?php if ($r['exists']): ?>
             <a class="download-btn" href="fetch.php?id=<?php echo urlencode($r['id']); ?>">
               <span class="material-icons" aria-hidden="true">download</span>
-              
             </a>
           <?php else: ?>
             <span class="unavail">Unavailable</span>

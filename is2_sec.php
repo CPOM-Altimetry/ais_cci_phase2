@@ -2,8 +2,8 @@
 // is2_sec.php — ICESat-2 tab (single large image)
 $mission_str = 'IS2';
 $pattern = ($hillshade === 'show')
-    ? "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.png"
-    : "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.png";
+    ? "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.avif"
+    : "quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.avif";
 $files = glob($pattern);
 $imagefile = $files[0] ?? '';
 
@@ -53,22 +53,21 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
   <!-- Left: Parameter dropdown (POST to stay on IS2 tab) -->
   <div class="w3-container">
     <div class="control-row">
-      <div id="product_dropdown" class="w3-dropdown-hover">
-        <span id="parameter_txt">Parameter:</span>
-        <button class="w3-button my-button-color">
-          <?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
-        </button>
-
-        <div class="w3-dropdown-content w3-bar-block w3-card-4">
-          <form method="POST" style="margin:0;">
-            <input type="hidden" name="active_tab" value="is2_sec">
-            <button type="submit" name="ql_param" value="sec"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</button>
-            <button type="submit" name="ql_param" value="sec_uncertainty" class="w3-bar-item w3-button">Uncertainty of SEC</button>
-            <button type="submit" name="ql_param" value="surface_type"    class="w3-bar-item w3-button">Surface Type</button>
-            <button type="submit" name="ql_param" value="basin_id"        class="w3-bar-item w3-button">Glaciological Basin ID</button>
-          </form>
-        </div>
-      </div>
+        <!-- Parameter dropdown -->
+                    <div id="product_dropdown" class="w3-dropdown-hover">
+                        <span id="parameter_txt">Parameter:</span>
+                        <button class="w3-button my-button-color">
+                            <?php echo htmlspecialchars($ql_param_str, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
+                        </button>
+                        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+                            <?php $base = "index.php?show_single_mission=0&active_tab=is2_sec;" ?>
+                            <a href="<?php echo $base; ?>&ql_param=sec#tab_row"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</a>
+                            <a href="<?php echo $base; ?>&ql_param=sec_uncertainty#tab_row" class="w3-bar-item w3-button">Uncertainty of SEC</a>
+                            <a href="<?php echo $base; ?>&ql_param=surface_type#tab_row"    class="w3-bar-item w3-button">Surface Type</a>
+                            <a href="<?php echo $base; ?>&ql_param=basin_id#tab_row"        class="w3-bar-item w3-button">Glaciological Basin ID</a>
+                        </div>
+                    </div>
+      
     </div>
   </div>
 </div>
@@ -79,7 +78,19 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
   <div class="w3-container">
     <div class="w3-card">
       <?php if ($imagefile): ?>
-        <img style="width:100%" src="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" alt="ICESat-2 quicklook">
+        <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>    
+        <picture style="width:100%;">
+            <source
+                srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
+                type="image/avif">
+            <source
+                srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                type="image/webp">
+            <img
+                src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+                alt="ICESat-2"
+                style="width:100%;">
+        </picture> 
         <div class="w3-container">
           <div class="all-text image_card_text">ICESat-2 <span class="date"><?php echo htmlspecialchars($date_txt, ENT_QUOTES); ?></span></div>
         </div>
