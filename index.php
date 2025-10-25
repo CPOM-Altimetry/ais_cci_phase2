@@ -43,10 +43,10 @@
 
     <div  class="tab">
         <button id="tab_row" class="tablinks" <?php if (!$show_single_mission) echo 'id="defaultOpen"'; ?> onclick="openTab(event, 'intro')">Product Types</button>
+        <button class="tablinks tab-download" onclick="openTab(event, 'multi_mission')">Multi-Mission 5-year SEC</button>
+        <button class="tablinks tab-download" onclick="openTab(event, 'annual_dh')">Annual dH</button>
         <button class="tablinks tab-download" <?php if ($show_single_mission) echo 'id="defaultOpen"'; ?> onclick="openTab(event, 'single_mission')">Single RA Mission SEC</button>
         <button class="tablinks tab-download" onclick="openTab(event, 'is2_sec')">ICESat-2 SEC</button>
-        <button class="tablinks tab-download" onclick="openTab(event, 'multi_mission')">Multi-Mission RA SEC</button>
-        <button class="tablinks tab-download" onclick="openTab(event, 'annual_dh')">Annual dH</button>
         <button class="tablinks tab-download tab-right" onclick="openTab(event, 'download')">
             <span class="material-icons" aria-hidden="true">download</span>
             <span class="download_txt">Download<br>Products</span>

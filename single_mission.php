@@ -92,9 +92,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3B-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -129,9 +129,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-S3A-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -166,9 +166,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-CS2-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -203,9 +203,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ENV-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -240,9 +240,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER2-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -277,9 +277,9 @@
                             <div class="w3-card" style="padding-bottom:5px; margin-bottom:10px;">
                                 <?php 
                                 if ($hillshade === 'show') {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}-hs.small.avif")[0] ?? '';
                                 } else {
-                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+                                    $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-ER1-5KM-*fv2-{$ql_param}.small.avif")[0] ?? '';
                                 }
                                 if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $matches)) {
                                     $start_year = substr($matches[1], 0, 4);
@@ -313,37 +313,55 @@
                 </div>
             </div>
         <?php } else { ?>
-            <!-- Large single image -->
-            <div class="images-wrap2">
-                <div class="w3-container">
-                    <div class="w3-card">
-                        <?php 
-                        if ($hillshade === 'show') {
-                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
-                        } else {
-                            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
-                        }
-                        ?>
-                        <a href="index.php?show_single_mission=1&ql_param=<?php echo urlencode($ql_param); ?>&sec_type=single_mission&single_mission_view=all&active_tab=single_mission">
-                                <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>    
-                                <picture style="width:100%;">
-                                        <source
-                                            srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
-                                            type="image/avif">
-                                        <source
-                                            srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
-                                            type="image/webp">
-                                        <img
-                                            src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
-                                            alt="Large {$mission_str}"
-                                            style="width:100%;">
-                            </picture> 
-                        </a>
-                        <div class="w3-container">   
-                            <div class="all-text image_card_text"><?php echo htmlspecialchars($mission_str ?: 'Mission', ENT_QUOTES); ?> <span class="date">(Dec-2018 to Apr-2021)</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
+  <!-- Large single image -->
+  <div class="images-wrap2">
+    <div class="w3-container">
+      <div class="w3-card image-card">
+
+        <?php 
+        if ($hillshade === 'show') {
+            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}-hs.avif")[0] ?? '';
+        } else {
+            $imagefile = glob("quicklooks/ESACCI-AIS-L3C-SEC-{$mission_str}-5KM-*fv2-{$ql_param}.avif")[0] ?? '';
+        }
+        $webpfile = $imagefile ? preg_replace('/\.avif$/i', '.webp', $imagefile) : '';
+        // URL that returns to the grid view
+        $toGridHref = "index.php?show_single_mission=1&ql_param="
+                      . urlencode($ql_param)
+                      . "&sec_type=single_mission&single_mission_view=all&active_tab=single_mission#tab_row";
+        ?>
+
+        <!-- Top-right overlay action (collapse to grid) -->
+        <a class="img-action-btn" href="<?php echo htmlspecialchars($toGridHref, ENT_QUOTES); ?>"
+           title="Back to grid" aria-label="Back to grid">
+          <span class="material-icons" aria-hidden="true">view_module</span>
+        </a>
+
+        <?php if ($imagefile): ?>
+          <picture class="img-full">
+            <source srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>" type="image/avif">
+            <source srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>" type="image/webp">
+            <img
+              src="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
+              alt="Large <?php echo htmlspecialchars($mission_str, ENT_QUOTES); ?> quicklook"
+              style="width:100%;"
+              loading="lazy">
+          </picture>
+        <?php else: ?>
+          <div style="padding:16px;">
+            <p style="margin:0; color:#b00;"><strong>No quicklook image found</strong>.</p>
+          </div>
+        <?php endif; ?>
+
+        <div class="w3-container">   
+          <div class="all-text image_card_text">
+            <?php echo htmlspecialchars($mission_str ?: 'Mission', ENT_QUOTES); ?>
+            <span class="date">(Dec-2018 to Apr-2021)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<?php } ?>
+
         <!-- ===================== /Images ===================== -->

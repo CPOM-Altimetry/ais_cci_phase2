@@ -14,7 +14,7 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
     $date_txt = "({$sm}-{$sy} to {$em}-{$ey})";
 }
 ?>
-<h3>ICESat-2 SEC</h3>
+<h3>ICESat-2 Surface Elevation Change</h3>
 
 <style>
   .float-right-img{ float:right; position:relative; top:-60px; max-width:100px; width:100%; height:auto; }
@@ -24,8 +24,11 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
 <img id="single_mission_logo" src="images/is2_mission_logo.png" alt="ICESat-2 logo" class="float-right-img">
 
 <p>
-  This section shows the surface elevation change (SEC, dh/dt) from the ICESat-2 mission.
-  The change is calculated within each 5&nbsp;km grid cell.
+  This section shows the surface elevation change (SEC, dh/dt) within each 5&nbsp;km grid cell from the 
+  <strong>ICESat-2</strong> mission.
+  
+  <strong>ICESat-2</strong> uses a laser altimeter (lidar). Its laser pulses reflect directly off the top snow surface
+  whereas radar altimeters penetrate the top layers of dry snow (the firn) and reflect off a denser subsurface level closer to the ice.
 </p>
 
 <!-- ===================== Toolbar ===================== -->
@@ -80,9 +83,9 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
       <?php if ($imagefile): ?>
         <?php $webpfile = preg_replace('/\.avif$/i', '.webp', $imagefile);?>    
         <picture style="width:100%;">
-            <source
+            <!-- <source
                 srcset="<?php echo htmlspecialchars($imagefile, ENT_QUOTES); ?>"
-                type="image/avif">
+                type="image/avif"> -->
             <source
                 srcset="<?php echo htmlspecialchars($webpfile, ENT_QUOTES); ?>"
                 type="image/webp">
