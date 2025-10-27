@@ -110,7 +110,6 @@ function showTabUI(evt, tabId) {
 function paneIsLoaded(pane){
   if (!pane) return false;
   if (pane.dataset && pane.dataset.loaded === "1") return true;
-  // If server rendered content is already there, also treat as loaded:
   return (pane.innerHTML && pane.innerHTML.trim().length > 10);
 }
 
@@ -127,12 +126,11 @@ function initTabBehaviors(tabId){
   const toggle = pane.querySelector('#is2-toggle-hillshade, #toggle-hillshade');
   if (toggle && !toggle.dataset.bound) {
     toggle.addEventListener('change', function(){
-      // Find matching form + hidden input inside this pane
       const form   = pane.querySelector('#is2-hillshade-form, #hillshade-form');
       const hidden = pane.querySelector('#is2-hillshade-input, #hillshade-input');
       if (!form || !hidden) return;
       hidden.value = this.checked ? 'show' : 'hide';
-      form.submit(); // full POST (server keeps us on the right tab via hidden active_tab)
+      form.submit();
     });
     toggle.dataset.bound = "1";
   }
@@ -144,19 +142,22 @@ function initTabBehaviors(tabId){
     missionSel.addEventListener('change', function(){ missionForm.submit(); });
     missionSel.dataset.bound = "1";
   }
+
+  // If this tab contains a video player, (re)bind it
+  if (pane.querySelector('.mmv-wrap')) {
+    if (window.rebindMultiMissionHandlers) window.rebindMultiMissionHandlers();
+  }
 }
 
 /* ===== Lazy loader ===== */
-const loadedTabs = new Set(); // track tabs fetched via AJAX
+const loadedTabs = new Set();
 
 function fetchTabHtml(tabId){
   const pane = document.getElementById(tabId);
   if (!pane) return Promise.resolve();
 
-  // Loading placeholder
   pane.innerHTML = '<div style="padding:16px;color:#666;">Loading…</div>';
 
-  // Pass along state; server also has session, but this helps first paint
   const params = new URLSearchParams({
     active_tab: tabId,
     ql_param:   TAB_DEFAULTS.qlParam,
@@ -181,24 +182,18 @@ function fetchTabHtml(tabId){
 /* ===== Public: openTab (click handler on buttons) ===== */
 function openTab(evt, tabId) {
   showTabUI(evt, tabId);
-
   const pane = document.getElementById(tabId);
-  // If already loaded (SSR or previously fetched), just (re)bind and return
   if (paneIsLoaded(pane)) {
     initTabBehaviors(tabId);
     return;
   }
-
-  // Otherwise, lazy fetch then bind
   fetchTabHtml(tabId);
 }
 
 /* ===== Initial boot ===== */
 document.addEventListener('DOMContentLoaded', function () {
-  // Prefer server-side remembered tab
   var tabId = TAB_DEFAULTS.active || 'intro';
 
-  // If we’re not on single_mission, clean up stale show_single_mission=1 in URL (cosmetic)
   if (tabId !== 'single_mission') {
     try {
       var url = new URL(window.location.href);
@@ -209,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch(e) {}
   }
 
-  // Show the tab, then lazy-load only if the pane is empty
   showTabUI(null, tabId);
   const pane = document.getElementById(tabId);
   if (!paneIsLoaded(pane)) {
@@ -218,7 +212,161 @@ document.addEventListener('DOMContentLoaded', function () {
     initTabBehaviors(tabId);
   }
 });
+
+/* ===== Minimal, ID-less video player bootstrap (no PHP vars) ===== */
+(function(){
+  function fmt(t){ if(!isFinite(t)||t<0) return '0:00'; var m=Math.floor(t/60), s=Math.floor(t%60); return m + ':' + (s<10?'0':'') + s; }
+  function chooseSrc(v){
+    try{
+      if (v.canPlayType('video/webm; codecs="av01.0.05M.08"')) return v.dataset.srcAv1 || '';
+      if (v.canPlayType('video/webm; codecs="vp9"'))          return v.dataset.srcVp9 || '';
+      return v.dataset.srcH264 || '';
+    }catch(e){ return v.dataset.srcH264 || ''; }
+  }
+
+  function initOnePlayer(root){
+    if (!root || root.dataset.bound === '1') return;
+    var v     = root.querySelector('video');
+    if (!v) return;
+
+    // If <source> tags are present, fine. If using data-* only, set src (Safari).
+    if (!v.currentSrc || v.duration === 0) {
+      if (!v.src && (v.dataset.srcAv1 || v.dataset.srcVp9 || v.dataset.srcH264)) {
+        var best = chooseSrc(v);
+        if (best) { v.src = best; v.load(); }
+      }
+    }
+
+    var bPlay = root.querySelector('[data-role="play"]');
+    var seek  = root.querySelector('[data-role="seek"]');
+    var cur   = root.querySelector('[data-role="cur"]');
+    var dur   = root.querySelector('[data-role="dur"]');
+    var speed = root.querySelector('[data-role="speed"]');
+    var bPip  = root.querySelector('[data-role="pip"]');
+    var bFs   = root.querySelector('[data-role="fs"]');
+
+    function syncPlayIcon(){ if(bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause'; }
+    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
+
+    function onMeta(){ if (dur) dur.textContent = fmt(v.duration); updateProgress(); }
+    v.addEventListener('loadedmetadata', onMeta);
+
+    // --- drop-in replacement for the seek logic ---
+var seeking = false;
+var wasPlaying = false;
+var seekRAF = null;
+
+function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
+function updateProgress(){
+  if (seeking || !isFinite(v.duration)) return;
+  var p = (v.currentTime / v.duration) * 1000 || 0;
+  if (seek) {
+    seek.value = Math.max(0, Math.min(1000, Math.round(p)));
+    root.style.setProperty('--mmv-fill', (p/10) + '%');
+  }
+  if (cur) cur.textContent = fmt(v.currentTime);
+}
+v.addEventListener('timeupdate', updateProgress);
+v.addEventListener('progress',   updateProgress);
+
+if (seek){
+  // Begin drag (support mouse/touch)
+  function beginSeek(){
+    seeking = true;
+    wasPlaying = !v.paused;
+    if (wasPlaying) v.pause();
+  }
+  seek.addEventListener('pointerdown', beginSeek);
+  seek.addEventListener('mousedown',   beginSeek);
+  seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+  // Live scrub: update currentTime on every input (throttled by rAF)
+  seek.addEventListener('input', function(){
+    var nt = pctToTime(seek.value);
+    if (cur) cur.textContent = fmt(nt);
+    root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+
+    if (seekRAF) cancelAnimationFrame(seekRAF);
+    seekRAF = requestAnimationFrame(function(){
+      v.currentTime = nt; // Chrome renders preview while paused
+    });
+  });
+
+  // Finish drag (catch mouseup/touchend anywhere on the page)
+  function finishSeek(){
+    if (!seeking) return;
+    var nt = pctToTime(seek.value);
+    v.currentTime = nt;   // ensure final position applied
+    seeking = false;
+    if (wasPlaying) v.play();
+  }
+  document.addEventListener('pointerup',   finishSeek);
+  document.addEventListener('mouseup',     finishSeek);
+  document.addEventListener('touchend',    finishSeek);
+  seek.addEventListener('pointercancel',   finishSeek);
+  seek.addEventListener('change',          finishSeek); // keyboard/fallback
+
+  // Keep UI in sync around seek events
+  v.addEventListener('seeking',  updateProgress);
+  v.addEventListener('seeked',   updateProgress);
+}
+
+
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+
+    if (bPip && 'pictureInPictureEnabled' in document) {
+      bPip.style.display = '';
+      bPip.addEventListener('click', async function(){
+        try{ if (document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
+        catch(e){ console.warn('PiP error', e); }
+      });
+    }
+
+    function fsActive(){ return document.fullscreenElement === root; }
+    function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+    if (bFs){
+      bFs.addEventListener('click', function(){
+        if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
+        else{ if (document.exitFullscreen) document.exitFullscreen(); }
+      });
+      document.addEventListener('fullscreenchange', syncFsIcon);
+    }
+
+    // Keyboard
+    root.tabIndex = 0;
+    root.addEventListener('keydown', function(e){
+      switch(e.key){
+        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+      }
+    });
+
+    // Fit wrapper to natural width (avoid black gutters)
+    var wrap = root.closest('.mmv-wrap') || root;
+    function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
+    if (v.readyState >= 1) fitToNaturalWidth();
+    v.addEventListener('loadedmetadata', fitToNaturalWidth);
+
+    syncPlayIcon();
+    if (v.readyState >= 1) onMeta();
+
+    root.dataset.bound = '1';
+  }
+
+  function initAllPlayers(){
+    document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer);
+  }
+
+  document.addEventListener('DOMContentLoaded', initAllPlayers);
+  window.rebindMultiMissionHandlers = initAllPlayers;
+})();
 </script>
+
+
 
 
 </html>

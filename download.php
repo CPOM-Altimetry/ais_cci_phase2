@@ -136,24 +136,26 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 </div>
 <!-- End of the new two-column section -->
 
-<h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
+<p>All netcdf products contain parameters on a 5km south polar stereographic (EPSG:3031) grid.</p>
 
+<h3>Multi-Mission 5-year SEC Downloads</h3>
+<p>Each file contains a 5-year period. Files are stepped by 1 month.</p>
+
+<h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 <table class="downloads">
   <thead>
     <tr>
       <th style="width:10%">Mission</th>
-      <th style="width:10%">Grid Size</th>
       <th style="width:10%">Size</th>
-      <th style="width: 50%">File</th>
+      <th style="width: 55%">File</th>
       <th style="width:15%">Updated</th>
-      <th style="width:5%">Action</th>
+      <th style="width:10%">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php foreach ($rows as $r): ?>
       <tr>
          <td><?php echo h($r['mission']); ?></td>
-         <td><?php echo h($r['grid_size']); ?></td>
         <td><?php echo h($r['size']); ?></td>
         <td><?php echo h(basename($r['file'])); ?></td>
         <td class="muted"><?php echo h($r['mtime']); ?></td>
@@ -211,18 +213,16 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
   <thead>
     <tr>
       <th style="width:10%">Mission</th>
-      <th style="width:10%">Grid Size</th>
       <th style="width:10%">Size</th>
-      <th style="width: 50%">File</th>
+      <th style="width: 55%">File</th>
       <th style="width:15%">Updated</th>
-      <th style="width:5%">Action</th>
+      <th style="width:10%">Action</th>
     </tr>
   </thead>
   <tbody>
     <?php foreach ($rows as $r): ?>
       <tr>
          <td><?php echo h($r['mission']); ?></td>
-         <td><?php echo h($r['grid_size']); ?></td>
         <td><?php echo h($r['size']); ?></td>
         <td><?php echo h(basename($r['file'])); ?></td>
         <td class="muted"><?php echo h($r['mtime']); ?></td>
