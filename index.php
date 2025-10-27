@@ -225,137 +225,181 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function initOnePlayer(root){
-    if (!root || root.dataset.bound === '1') return;
-    var v     = root.querySelector('video');
-    if (!v) return;
+  if (!root || root.dataset.bound === '1') return;
 
-    // If <source> tags are present, fine. If using data-* only, set src (Safari).
-    if (!v.currentSrc || v.duration === 0) {
-      if (!v.src && (v.dataset.srcAv1 || v.dataset.srcVp9 || v.dataset.srcH264)) {
-        var best = chooseSrc(v);
-        if (best) { v.src = best; v.load(); }
-      }
+  // --- Elements ---
+  var v       = root.querySelector('video');
+  if (!v) return;
+  var bPlay   = root.querySelector('[data-role="play"]');
+  var seek    = root.querySelector('[data-role="seek"]');
+  var cur     = root.querySelector('[data-role="cur"]');
+  var dur     = root.querySelector('[data-role="dur"]');
+  var speed   = root.querySelector('[data-role="speed"]');
+  var bPip    = root.querySelector('[data-role="pip"]');
+  var bFs     = root.querySelector('[data-role="fs"]');
+
+  // Oblong window pieces
+  var scrubWrap = root.querySelector('.mmv-scrub-wrap');
+  var winEl     = root.querySelector('.mmv-window');
+
+  // --- Safari-friendly source selection (works with <source> or data-* sources) ---
+  if (!v.currentSrc || v.duration === 0) {
+    if (!v.src && (v.dataset.srcAv1 || v.dataset.srcVp9 || v.dataset.srcH264)) {
+      var best = chooseSrc(v);
+      if (best) { v.src = best; v.load(); }
     }
-
-    var bPlay = root.querySelector('[data-role="play"]');
-    var seek  = root.querySelector('[data-role="seek"]');
-    var cur   = root.querySelector('[data-role="cur"]');
-    var dur   = root.querySelector('[data-role="dur"]');
-    var speed = root.querySelector('[data-role="speed"]');
-    var bPip  = root.querySelector('[data-role="pip"]');
-    var bFs   = root.querySelector('[data-role="fs"]');
-
-    function syncPlayIcon(){ if(bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause'; }
-    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
-    v.addEventListener('play',  syncPlayIcon);
-    v.addEventListener('pause', syncPlayIcon);
-
-    function onMeta(){ if (dur) dur.textContent = fmt(v.duration); updateProgress(); }
-    v.addEventListener('loadedmetadata', onMeta);
-
-    // --- drop-in replacement for the seek logic ---
-var seeking = false;
-var wasPlaying = false;
-var seekRAF = null;
-
-function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
-function updateProgress(){
-  if (seeking || !isFinite(v.duration)) return;
-  var p = (v.currentTime / v.duration) * 1000 || 0;
-  if (seek) {
-    seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-    root.style.setProperty('--mmv-fill', (p/10) + '%');
   }
-  if (cur) cur.textContent = fmt(v.currentTime);
-}
-v.addEventListener('timeupdate', updateProgress);
-v.addEventListener('progress',   updateProgress);
 
-if (seek){
-  // Begin drag (support mouse/touch)
-  function beginSeek(){
-    seeking = true;
-    wasPlaying = !v.paused;
-    if (wasPlaying) v.pause();
+  // --- Helpers ---
+  function syncPlayIcon(){
+    if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
   }
-  seek.addEventListener('pointerdown', beginSeek);
-  seek.addEventListener('mousedown',   beginSeek);
-  seek.addEventListener('touchstart',  beginSeek, {passive:true});
+  function onMeta(){
+    if (dur) dur.textContent = fmt(v.duration);
+    updateProgress();
+    sizeWindow();  // ensure correct initial sizing after metadata arrives
+  }
 
-  // Live scrub: update currentTime on every input (throttled by rAF)
-  seek.addEventListener('input', function(){
-    var nt = pctToTime(seek.value);
-    if (cur) cur.textContent = fmt(nt);
-    root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+  // 5-year window fraction of total (1991–2025 -> 34 years)
+  var WINDOW_FRAC = 5 / (2025 - 1991); // ≈ 0.14706
 
-    if (seekRAF) cancelAnimationFrame(seekRAF);
-    seekRAF = requestAnimationFrame(function(){
-      v.currentTime = nt; // Chrome renders preview while paused
+  function sizeWindow(){
+    if (!scrubWrap || !winEl) return;
+    var w  = scrubWrap.clientWidth;
+    var px = Math.max(16, Math.round(w * WINDOW_FRAC)); // keep a sensible minimum
+    winEl.style.width = px + 'px';
+    positionWindow(); // reposition after sizing
+  }
+  function positionWindow(){
+    if (!scrubWrap || !winEl || !seek) return;
+    var trackW = scrubWrap.clientWidth;
+    var thumbW = winEl.offsetWidth || 0;
+    var pct    = (seek.value/1000);           // 0..1
+    var x      = Math.round(pct * (trackW - thumbW));
+    winEl.style.left = x + 'px';
+  }
+
+  // --- Wire play/pause ---
+  if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
+  v.addEventListener('play',  syncPlayIcon);
+  v.addEventListener('pause', syncPlayIcon);
+
+  // --- Metadata / duration ---
+  v.addEventListener('loadedmetadata', onMeta);
+
+  // --- Progress & scrubbing (Chrome-friendly live thumbnails) ---
+  var seeking = false;
+  var wasPlaying = false;
+  var seekRAF = null;
+
+  function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
+
+  function updateProgress(){
+    if (seeking || !isFinite(v.duration)) return;
+    var p = (v.currentTime / v.duration) * 1000 || 0;
+    if (seek) {
+      seek.value = Math.max(0, Math.min(1000, Math.round(p)));
+      root.style.setProperty('--mmv-fill', (p/10) + '%');
+      positionWindow(); // keep 5-year window in sync during playback
+    }
+    if (cur) cur.textContent = fmt(v.currentTime);
+  }
+  v.addEventListener('timeupdate', updateProgress);
+  v.addEventListener('progress',   updateProgress);
+
+  if (seek){
+    function beginSeek(){
+      seeking = true;
+      wasPlaying = !v.paused;
+      if (wasPlaying) v.pause();
+    }
+    seek.addEventListener('pointerdown', beginSeek);
+    seek.addEventListener('mousedown',   beginSeek);
+    seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+    seek.addEventListener('input', function(){
+      var nt = pctToTime(seek.value);
+      if (cur) cur.textContent = fmt(nt);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      positionWindow();
+
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(function(){
+        v.currentTime = nt; // Chrome shows the frame while paused
+      });
     });
+
+    function finishSeek(){
+      if (!seeking) return;
+      var nt = pctToTime(seek.value);
+      v.currentTime = nt;   // ensure final position applied
+      seeking = false;
+      positionWindow();
+      if (wasPlaying) v.play();
+    }
+    document.addEventListener('pointerup',    finishSeek);
+    document.addEventListener('mouseup',      finishSeek);
+    document.addEventListener('touchend',     finishSeek);
+    seek.addEventListener('pointercancel',    finishSeek);
+    seek.addEventListener('change',           finishSeek); // keyboard/fallback
+
+    v.addEventListener('seeking', updateProgress);
+    v.addEventListener('seeked',  updateProgress);
+  }
+
+  // --- Speed ---
+  if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+
+  // --- PiP (if available) ---
+  if (bPip && 'pictureInPictureEnabled' in document) {
+    bPip.style.display = '';
+    bPip.addEventListener('click', async function(){
+      try{
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else await v.requestPictureInPicture();
+      }catch(e){ console.warn('PiP error', e); }
+    });
+  }
+
+  // --- Fullscreen ---
+  function fsActive(){ return document.fullscreenElement === root; }
+  function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+  if (bFs){
+    bFs.addEventListener('click', function(){
+      if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
+      else{ if (document.exitFullscreen) document.exitFullscreen(); }
+    });
+    document.addEventListener('fullscreenchange', syncFsIcon);
+  }
+
+  // --- Keyboard shortcuts ---
+  root.tabIndex = 0;
+  root.addEventListener('keydown', function(e){
+    switch(e.key){
+      case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
+      case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+      case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+      case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+    }
   });
 
-  // Finish drag (catch mouseup/touchend anywhere on the page)
-  function finishSeek(){
-    if (!seeking) return;
-    var nt = pctToTime(seek.value);
-    v.currentTime = nt;   // ensure final position applied
-    seeking = false;
-    if (wasPlaying) v.play();
-  }
-  document.addEventListener('pointerup',   finishSeek);
-  document.addEventListener('mouseup',     finishSeek);
-  document.addEventListener('touchend',    finishSeek);
-  seek.addEventListener('pointercancel',   finishSeek);
-  seek.addEventListener('change',          finishSeek); // keyboard/fallback
+  // --- Fit wrapper to natural width (reduces black gutters) ---
+  var wrap = root.closest('.mmv-wrap') || root;
+  function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
+  if (v.readyState >= 1) fitToNaturalWidth();
+  v.addEventListener('loadedmetadata', fitToNaturalWidth);
 
-  // Keep UI in sync around seek events
-  v.addEventListener('seeking',  updateProgress);
-  v.addEventListener('seeked',   updateProgress);
+  // --- Size the 5-year window now and on resize ---
+  sizeWindow();
+  window.addEventListener('resize', sizeWindow, { passive:true });
+
+  // Initial UI sync
+  syncPlayIcon();
+  if (v.readyState >= 1) onMeta();
+
+  root.dataset.bound = '1';
 }
 
-
-    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-
-    if (bPip && 'pictureInPictureEnabled' in document) {
-      bPip.style.display = '';
-      bPip.addEventListener('click', async function(){
-        try{ if (document.pictureInPictureElement) await document.exitPictureInPicture(); else await v.requestPictureInPicture(); }
-        catch(e){ console.warn('PiP error', e); }
-      });
-    }
-
-    function fsActive(){ return document.fullscreenElement === root; }
-    function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
-    if (bFs){
-      bFs.addEventListener('click', function(){
-        if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
-        else{ if (document.exitFullscreen) document.exitFullscreen(); }
-      });
-      document.addEventListener('fullscreenchange', syncFsIcon);
-    }
-
-    // Keyboard
-    root.tabIndex = 0;
-    root.addEventListener('keydown', function(e){
-      switch(e.key){
-        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
-        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
-      }
-    });
-
-    // Fit wrapper to natural width (avoid black gutters)
-    var wrap = root.closest('.mmv-wrap') || root;
-    function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
-    if (v.readyState >= 1) fitToNaturalWidth();
-    v.addEventListener('loadedmetadata', fitToNaturalWidth);
-
-    syncPlayIcon();
-    if (v.readyState >= 1) onMeta();
-
-    root.dataset.bound = '1';
-  }
 
   function initAllPlayers(){
     document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer);

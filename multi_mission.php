@@ -60,6 +60,35 @@ $PLAYER_ID = 'mmv-player';
     border:1px solid #d9dee5;border-radius:8px;background:#fff;height:36px;padding:0 8px;
   }
 
+  /* Scrub area wraps the range so the window can be positioned absolutely */
+.mmv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px }
+
+/* Range track */
+.mmv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer; }
+.mmv-range:focus{ outline:none; }
+
+/* WebKit track */
+.mmv-range::-webkit-slider-runnable-track{
+  height:6px; border-radius:999px;
+  background: linear-gradient(to right,var(--mmv-rail-fill) var(--mmv-fill,0%),var(--mmv-rail) var(--mmv-fill,0%));
+}
+/* Hide native thumb (we’ll show our own “window”) */
+.mmv-range::-webkit-slider-thumb{
+  appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0;
+}
+
+/* Firefox track + hide thumb */
+.mmv-range::-moz-range-track{ height:6px; background:var(--mmv-rail); border-radius:999px; }
+.mmv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent; }
+
+/* The custom oblong “thumb” representing a 5-year window */
+.mmv-window{
+  position:absolute; top:50%; transform:translateY(-50%);
+  height:18px; border-radius:9px;
+  border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
+  pointer-events:none; /* clicks go to the range input */
+}
+
   @media (max-width:720px){
     .mmv-time{min-width:auto}
   }
@@ -72,9 +101,14 @@ $PLAYER_ID = 'mmv-player';
     </div>
 
     <div class="mmv-center">
-      <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
-      <!-- <div class="mmv-time"><span data-role="cur">0:00</span> / <span data-role="dur">0:00</span></div> -->
+        <div class="mmv-scrub-wrap">
+            <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+            <!-- Visual 5-year window “thumb” -->
+            <div class="mmv-window" aria-hidden="true"></div>
+        </div>
+        <div class="mmv-time"><span data-role="cur">0:00</span> / <span data-role="dur">0:00</span></div>
     </div>
+
 
     <div class="mmv-right">
       <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
