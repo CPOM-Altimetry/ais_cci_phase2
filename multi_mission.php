@@ -66,32 +66,14 @@ $PLAYER_ID = 'mmv-player';
 </style>
 
 <div class="mmv-wrap" id="<?php echo $PLAYER_ID; ?>">
-  <div class="mmv-media">
-    <video
-      id="<?php echo $PLAYER_ID; ?>-video"
-      preload="metadata"
-      playsinline
-      <?php if ($poster) echo 'poster="'.htmlspecialchars($poster,ENT_QUOTES).'"'; ?>
-      data-src-av1="<?php echo htmlspecialchars($src_av1,ENT_QUOTES); ?>"
-      data-src-vp9="<?php echo htmlspecialchars($src_vp9,ENT_QUOTES); ?>"
-      data-src-h264="<?php echo htmlspecialchars($src_h264,ENT_QUOTES); ?>"
-    >
-      <!-- Keep sources as a fallback; JS will override .src explicitly -->
-      <source src="<?php echo htmlspecialchars($src_av1,ENT_QUOTES);  ?>" type="video/webm; codecs=av01.0.05M.08">
-      <source src="<?php echo htmlspecialchars($src_vp9,ENT_QUOTES);  ?>" type="video/webm; codecs=vp9">
-      <source src="<?php echo htmlspecialchars($src_h264,ENT_QUOTES); ?>" type="video/mp4">
-      Your browser doesn’t support HTML5 video.
-    </video>
-  </div>
-
-  <div class="mmv-controls" role="group" aria-label="Video controls">
+    <div class="mmv-controls" role="group" aria-label="Video controls">
     <div class="mmv-left">
       <button class="mmv-btn" data-role="play" aria-label="Play/Pause"><span class="material-icons">play_arrow</span></button>
     </div>
 
     <div class="mmv-center">
       <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
-      <div class="mmv-time"><span data-role="cur">0:00</span> / <span data-role="dur">0:00</span></div>
+      <!-- <div class="mmv-time"><span data-role="cur">0:00</span> / <span data-role="dur">0:00</span></div> -->
     </div>
 
     <div class="mmv-right">
@@ -103,10 +85,25 @@ $PLAYER_ID = 'mmv-player';
         <option value="1.5">1.5×</option>
         <option value="2">2×</option>
       </select>
-      <button class="mmv-btn" data-role="pip" aria-label="Picture in picture" style="display:none"><span class="material-icons">picture_in_picture_alt</span></button>
       <button class="mmv-btn" data-role="fs" aria-label="Fullscreen"><span class="material-icons">fullscreen</span></button>
     </div>
   </div>
+  <div class="mmv-media">
+    <video
+      id="<?php echo $PLAYER_ID; ?>-video"
+      preload="metadata"
+      playsinline
+      <?php if ($poster) echo 'poster="'.htmlspecialchars($poster,ENT_QUOTES).'"'; ?>
+    >
+      <!-- Browser will auto-pick first supported source -->
+      <source src="<?php echo htmlspecialchars($src_av1,ENT_QUOTES);  ?>" type="video/webm; codecs=av01.0.05M.08">
+      <source src="<?php echo htmlspecialchars($src_vp9,ENT_QUOTES);  ?>" type="video/webm; codecs=vp9">
+      <source src="<?php echo htmlspecialchars($src_h264,ENT_QUOTES); ?>" type="video/mp4">
+      Your browser doesn’t support HTML5 video.
+    </video>
+  </div>
+
+  
 </div>
 
 <script>
