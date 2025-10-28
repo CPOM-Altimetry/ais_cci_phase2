@@ -127,7 +127,7 @@ $PLAYER_ID = 'mmv-player';
             <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
             <span class="slider round"></span>
           </label>
-          <span class="toggle-option tog_to_hide">HS</span>
+          <span class="toggle-option tog_to_hide">Hillshade</span>
         </div>
       </div>
       <!-- === /Hill Shade toggle === -->
