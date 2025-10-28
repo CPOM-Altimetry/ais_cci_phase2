@@ -108,7 +108,6 @@ $PLAYER_ID = 'mmv-player';
         <option value="2">2×</option>
       </select>
       <!-- PiP REMOVED -->
-      <button class="mmv-btn" data-role="fs" aria-label="Fullscreen"><span class="material-icons">fullscreen</span></button>
     </div>
   </div>
 
