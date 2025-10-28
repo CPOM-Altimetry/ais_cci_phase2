@@ -119,7 +119,7 @@ $PLAYER_ID = 'mmv-player';
         <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
 
           <form id="hillshade-form" method="POST" style="display:none;">
-            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'HS' : 'hide'; ?>">
+            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
             <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
           </form>
 
@@ -185,7 +185,30 @@ $PLAYER_ID = 'mmv-player';
   var bPlay = root.querySelector('[data-role="play"]');
   var seek  = root.querySelector('[data-role="seek"]');
   var speed = root.querySelector('[data-role="speed"]');
-  var bHS   = root.querySelector('[data-role="hs"]');
+  var bHS   = root.querySelector('[data-role="hs"]'); // may be null (we post via form)
+  var win   = root.querySelector('.mmv-window');
+
+  // ----- 5-year window metrics -----
+  var start = (root.dataset.start||'').match(/^(\d{4})-(\d{2})$/);
+  var end   = (root.dataset.end  ||'').match(/^(\d{4})-(\d{2})$/);
+  var totalMonths = 1;
+  if (start && end){
+    totalMonths = ((+end[1]-+start[1])*12 + ((+end[2])-(+start[2])) + 1) || 1;
+  }
+  var windowMonths = 60; // 5 years
+  var railW = 0, winW = 0;
+
+  function measureWindow(){
+    if (!seek || !win) return;
+    railW = seek.getBoundingClientRect().width;
+    winW  = Math.max(24, Math.round(railW * (windowMonths/totalMonths)));
+    win.style.width = winW + 'px';
+  }
+  function placeWindow(pct1000){
+    if (!seek || !win || railW === 0) return;
+    var x = (pct1000/1000) * Math.max(0, railW - winW);
+    win.style.left = x + 'px';
+  }
 
   // Keep your existing poster/size behavior
   function syncPlayIcon(){ if(bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause'; }
@@ -193,15 +216,16 @@ $PLAYER_ID = 'mmv-player';
   v.addEventListener('play',  syncPlayIcon);
   v.addEventListener('pause', syncPlayIcon);
 
-  // --------- slider + progress (same as you had) ----------
+  // --------- slider + progress ----------
   var seeking=false, wasPlaying=false, seekRAF=null;
   function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
   function updateProgress(){
-    if (seeking || !isFinite(v.duration)) return;
+    if (!isFinite(v.duration)) return;
     var p = (v.currentTime / v.duration) * 1000 || 0;
-    if (seek){
+    if (!seeking && seek){
       seek.value = Math.max(0, Math.min(1000, Math.round(p)));
       root.style.setProperty('--mmv-fill', (p/10) + '%');
+      placeWindow(p);
     }
   }
   v.addEventListener('timeupdate', updateProgress);
@@ -214,15 +238,17 @@ $PLAYER_ID = 'mmv-player';
     seek.addEventListener('touchstart',  beginSeek, {passive:true});
 
     seek.addEventListener('input', function(){
-      var nt = pctToTime(seek.value);
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      var pct = +seek.value || 0;
+      root.style.setProperty('--mmv-fill', (pct/10) + '%');
+      placeWindow(pct);
+      var nt = pctToTime(pct);
       if (seekRAF) cancelAnimationFrame(seekRAF);
       seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
     });
 
     function finishSeek(){
       if (!seeking) return;
-      var nt = pctToTime(seek.value);
+      var nt = pctToTime(+seek.value || 0);
       v.currentTime = nt;
       seeking = false;
       if (wasPlaying) v.play();
@@ -252,86 +278,30 @@ $PLAYER_ID = 'mmv-player';
   if (v.readyState >= 1) fitToNaturalWidth();
   v.addEventListener('loadedmetadata', fitToNaturalWidth);
 
-  // --------- NEW: Hillshade toggle wiring (robust) ----------
-function can(type){ try { return !!v.canPlayType(type); } catch(e){ return false; } }
-function pickBestUrl(hs){
-  // data-attr names => dataset keys
-  const a1  = v.dataset[hs ? 'srcAv1Hs'  : 'srcAv1No']   || '';
-  const vp9 = v.dataset[hs ? 'srcVp9Hs'  : 'srcVp9No']   || '';
-  const mp4 = v.dataset[hs ? 'srcH264Hs' : 'srcH264No']  || '';
-
-  if (a1  && can('video/webm; codecs="av01.0.05M.08"')) return {url:a1,  type:'video/webm; codecs=av01.0.05M.08'};
-  if (vp9 && can('video/webm; codecs="vp9"'))          return {url:vp9, type:'video/webm; codecs=vp9'};
-  if (mp4)                                              return {url:mp4, type:'video/mp4'};
-  // last resort: whatever exists
-  if (vp9) return {url:vp9, type:'video/webm'};
-  if (a1)  return {url:a1,  type:'video/webm'};
-  return {url:'', type:''};
-}
-
-function setPoster(hs){
-  const p = v.dataset[hs ? 'posterHs' : 'posterNo'] || '';
-  if (p) v.setAttribute('poster', p);
-}
-
-function rebuildSources(bestPrimary, hs){
-  // wipe any existing <source> nodes & src
-  while (v.firstChild) v.removeChild(v.firstChild);
-  v.removeAttribute('src');
-
-  // Build a preferred list (primary first, then the other candidates)
-  const a1  = v.dataset[hs ? 'srcAv1Hs'  : 'srcAv1No']   || '';
-  const vp9 = v.dataset[hs ? 'srcVp9Hs'  : 'srcVp9No']   || '';
-  const mp4 = v.dataset[hs ? 'srcH264Hs' : 'srcH264No']  || '';
-
-  const order = [];
-  if (bestPrimary.url) order.push(bestPrimary);
-  // add remaining (no dups)
-  if (bestPrimary.url !== a1 && a1)   order.push({url:a1,  type:'video/webm; codecs=av01.0.05M.08'});
-  if (bestPrimary.url !== vp9 && vp9) order.push({url:vp9, type:'video/webm; codecs=vp9'});
-  if (bestPrimary.url !== mp4 && mp4) order.push({url:mp4, type:'video/mp4'});
-
-  order.forEach(s => {
-    const el = document.createElement('source');
-    el.src = s.url;
-    if (s.type) el.type = s.type;
-    v.appendChild(el);
+  // Initial placement (match poster at end) after metadata, and on resize
+  v.addEventListener('loadedmetadata', function(){
+    measureWindow();
+    if (seek){
+      seek.value = 1000;
+      root.style.setProperty('--mmv-fill', '100%');
+      placeWindow(1000);
+    }
   });
+  window.addEventListener('resize', function(){ measureWindow(); placeWindow(+seek?.value||0); });
+
+  // ---------- (optional) hillshade JS-only swap button support ----------
+  if (bHS && !bHS.dataset.bound) {
+    bHS.addEventListener('click', function(){
+      const next = bHS.getAttribute('aria-pressed') !== 'true';
+      bHS.setAttribute('aria-pressed', next ? 'true' : 'false');
+    });
+    bHS.dataset.bound = '1';
+  }
+
+  syncPlayIcon();
+  root.dataset.bound = '1';
 }
 
-function swapHillshade(hsOn){
-  const wasPlaying = !v.paused;
-  const t = v.currentTime || 0;
-
-  // update button state + poster
-  if (bHS) bHS.setAttribute('aria-pressed', hsOn ? 'true' : 'false');
-  setPoster(hsOn);
-
-  // pick primary + rebuild <source> list
-  const best = pickBestUrl(hsOn);
-  if (!best.url) return;
-
-  v.pause();
-  rebuildSources(best, hsOn);
-
-  // reload and restore position
-  v.load();
-  v.addEventListener('loadedmetadata', function onLM(){
-    v.removeEventListener('loadedmetadata', onLM);
-    try { v.currentTime = Math.min(t, v.duration || t); } catch(_) {}
-    if (wasPlaying) v.play();
-    // re-sync slider
-    if (typeof updateProgress === 'function') updateProgress();
-  }, { once:true });
-}
-
-if (bHS && !bHS.dataset.bound) {
-  bHS.addEventListener('click', function(){
-    const next = bHS.getAttribute('aria-pressed') !== 'true';
-    swapHillshade(next);
-  });
-  bHS.dataset.bound = '1';
-}
 
   // --------------------------------------------------
 
