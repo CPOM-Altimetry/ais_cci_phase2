@@ -120,7 +120,7 @@ $PLAYER_ID = 'mmv-player';
           <span class="toggle-option">hide</span>
 
           <form id="hillshade-form" method="POST" style="display:none;">
-            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'HS' : 'hide'; ?>">
             <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
           </form>
 
@@ -128,7 +128,7 @@ $PLAYER_ID = 'mmv-player';
             <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
             <span class="slider round"></span>
           </label>
-          <span class="toggle-option tog_to_hide">show</span>
+          <span class="toggle-option tog_to_hide">HS</span>
         </div>
       </div>
       <!-- === /Hill Shade toggle === -->
