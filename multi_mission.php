@@ -35,10 +35,18 @@ $PLAYER_ID = 'mmv-player';
 
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
-  .mmv-wrap{max-width:1200px;margin:10px 0;border:1px solid #ddd;border-radius:10px;overflow:hidden;background:#fff;}
+  .mmv-wrap{
+  margin: 10px auto;                 /* <— centers the player */
+  max-width: var(--mmv-max, 1200px); /* <— default cap, can be overridden by JS */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
   .mmv-controls{position:relative; z-index:2; display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px;background:#f7f9fc;border-top:1px solid #e6ebf0;}
   .mmv-media{position:relative; z-index:1; background:#000;}
-  .mmv-media video{display:block;width:100%;height:auto;aspect-ratio:720/720;background:#000;}
+  .mmv-media video{display:block;width:100%;height:auto;aspect-ratio:780/780;background:#000;}
 
   .mmv-left,.mmv-right{display:flex;align-items:center;gap:10px}
   .mmv-center{flex:1 1 auto;display:flex;align-items:center;gap:10px}
@@ -270,4 +278,16 @@ $PLAYER_ID = 'mmv-player';
   document.addEventListener('DOMContentLoaded', initAllPlayers);
   window.rebindMultiMissionHandlers = initAllPlayers;
 })();
+
+// Fit wrapper to natural width (avoid black gutters on wide screens)
+var wrap = root.closest('.mmv-wrap') || root;
+function fitToNaturalWidth(){
+  if (v.videoWidth > 0) {
+    // Set CSS variable the CSS rule reads
+    wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
+  }
+}
+if (v.readyState >= 1) fitToNaturalWidth();
+v.addEventListener('loadedmetadata', fitToNaturalWidth);
+
 </script>
