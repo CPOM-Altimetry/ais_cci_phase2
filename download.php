@@ -140,6 +140,19 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 
 <h3>Multi-Mission 5-year SEC Downloads</h3>
 <p>Each file contains a 5-year period. Files are stepped by 1 month.</p>
+<table class="downloads">
+  <thead>
+    <tr>
+      <th style="width:10%">Mission</th>
+      <th style="width:10%">Size</th>
+      <th style="width: 55%">File</th>
+      <th style="width:15%">Updated</th>
+      <th style="width:10%">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+</tbody>
+</table>
 
 <h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 <table class="downloads">
