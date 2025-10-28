@@ -162,165 +162,180 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   </div>
 </div>
 
-
-
-
-
 <script>
 (function () {
-  /* ---------- utilities ---------- */
+  /* ---------------- utils ---------------- */
   function parseYYYYMM(s){ const m=(s||'').match(/^(\d{4})-(\d{2})$/); return m?{y:+m[1],m:+m[2]}:null; }
   function monthsBetween(a,b){ if(!a||!b) return 0; return (b.y-a.y)*12 + (b.m-a.m) + 1; }
   function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
   function pctToTime(p,d){ return (p/1000)*(d||0); }
-  function fmt(t){ if(!isFinite(t)||t<0) return '0:00'; const m=Math.floor(t/60),s=Math.floor(t%60); return m+':' +(s<10?'0':'')+s; }
-  function pickBest(v, av1, vp9, h264){
-    try{
-      if (av1 && v.canPlayType('video/webm; codecs="av01.0.05M.08"')) return av1;
-      if (vp9 && v.canPlayType('video/webm; codecs="vp9"'))          return vp9;
-      return h264 || vp9 || av1 || '';
-    }catch(e){ return h264 || vp9 || av1 || ''; }
-  }
 
-  /* ---------- one player ---------- */
+  /* --------------- one player --------------- */
   function initOnePlayer(root){
-  if (!root || root.dataset.bound === '1') return;
-  var v     = root.querySelector('video');
-  if (!v) return;
+    if (!root || root.dataset.bound === '1') return;
 
-  var bPlay = root.querySelector('[data-role="play"]');
-  var seek  = root.querySelector('[data-role="seek"]');
-  var speed = root.querySelector('[data-role="speed"]');
-  var bHS   = root.querySelector('[data-role="hs"]'); // may be null (we post via form)
-  var win   = root.querySelector('.mmv-window');
+    var v      = root.querySelector('video');
+    var bPlay  = root.querySelector('[data-role="play"]');
+    var seek   = root.querySelector('[data-role="seek"]');
+    var speed  = root.querySelector('[data-role="speed"]');
+    var winEl  = root.querySelector('.mmv-window');
+    var rail   = root.querySelector('.mmv-scrub-wrap');
 
-  // ----- 5-year window metrics -----
-  var start = (root.dataset.start||'').match(/^(\d{4})-(\d{2})$/);
-  var end   = (root.dataset.end  ||'').match(/^(\d{4})-(\d{2})$/);
-  var totalMonths = 1;
-  if (start && end){
-    totalMonths = ((+end[1]-+start[1])*12 + ((+end[2])-(+start[2])) + 1) || 1;
-  }
-  var windowMonths = 60; // 5 years
-  var railW = 0, winW = 0;
+    // Hillshade (same ids as other tabs)
+    var hsToggle = root.querySelector('#toggle-hillshade');
+    var hsForm   = root.querySelector('#hillshade-form');
+    var hsInput  = root.querySelector('#hillshade-input');
+    var hsTab    = root.querySelector('#active_tab_input');
 
-  function measureWindow(){
-    if (!seek || !win) return;
-    railW = seek.getBoundingClientRect().width;
-    winW  = Math.max(24, Math.round(railW * (windowMonths/totalMonths)));
-    win.style.width = winW + 'px';
-  }
-  function placeWindow(pct1000){
-    if (!seek || !win || railW === 0) return;
-    var x = (pct1000/1000) * Math.max(0, railW - winW);
-    win.style.left = x + 'px';
-  }
+    if (!v) return;
 
-  // Keep your existing poster/size behavior
-  function syncPlayIcon(){ if(bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause'; }
-  if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
-  v.addEventListener('play',  syncPlayIcon);
-  v.addEventListener('pause', syncPlayIcon);
+    /* ---- timeline for window width ---- */
+    var startISO = root.dataset.start || '1991-01';
+    var endISO   = root.dataset.end   || '2025-12';
+    var start    = parseYYYYMM(startISO);
+    var end      = parseYYYYMM(endISO);
+    var totalM   = Math.max(1, monthsBetween(start, end)); // avoid divide by 0
+    var windowM  = 60; // 5 years
 
-  // --------- slider + progress ----------
-  var seeking=false, wasPlaying=false, seekRAF=null;
-  function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
-  function updateProgress(){
-    if (!isFinite(v.duration)) return;
-    var p = (v.currentTime / v.duration) * 1000 || 0;
-    if (!seeking && seek){
-      seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-      root.style.setProperty('--mmv-fill', (p/10) + '%');
-      placeWindow(p);
+    var railW = 0, windowW = 0, initialEndApplied = false;
+
+    function measureWindow(){
+      if (!seek || !winEl) return;
+      railW = seek.clientWidth || (rail ? rail.clientWidth : 0) || 0;
+      windowW = clamp(railW * (windowM / totalM), 16, railW); // at least visible
+      winEl.style.width = windowW + 'px';
     }
-  }
-  v.addEventListener('timeupdate', updateProgress);
-  v.addEventListener('progress',   updateProgress);
 
-  if (seek){
+    function placeWindow(pct){
+      if (!winEl || !seek) return;
+      var x = (pct/1000) * railW - windowW/2;
+      x = clamp(x, 0, Math.max(0, railW - windowW));
+      winEl.style.left = x + 'px';
+    }
+
+    /* ---- UI sync (during playback) ---- */
+    var seeking = false, wasPlaying = false, seekRAF = null;
+
+    function updateProgress(){
+      if (!isFinite(v.duration)) return;
+      if (seeking) return;
+      var p = (v.currentTime / v.duration) * 1000 || 0;
+      if (seek){
+        seek.value = clamp(Math.round(p), 0, 1000);
+        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+        placeWindow(seek.value);
+      }
+    }
+
+    v.addEventListener('timeupdate', updateProgress);
+    v.addEventListener('progress',   updateProgress);
+
+    /* ---- play/pause ---- */
+    function syncPlayIcon(){
+      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
+    }
+    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
+
+    /* ---- seeking (Chrome-friendly live scrub) ---- */
     function beginSeek(){ seeking = true; wasPlaying = !v.paused; if (wasPlaying) v.pause(); }
-    seek.addEventListener('pointerdown', beginSeek);
-    seek.addEventListener('mousedown',   beginSeek);
-    seek.addEventListener('touchstart',  beginSeek, {passive:true});
-
-    seek.addEventListener('input', function(){
-      var pct = +seek.value || 0;
-      root.style.setProperty('--mmv-fill', (pct/10) + '%');
-      placeWindow(pct);
-      var nt = pctToTime(pct);
-      if (seekRAF) cancelAnimationFrame(seekRAF);
-      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
-    });
-
     function finishSeek(){
       if (!seeking) return;
-      var nt = pctToTime(+seek.value || 0);
+      var nt = pctToTime(seek.value, v.duration);
       v.currentTime = nt;
       seeking = false;
       if (wasPlaying) v.play();
     }
-    document.addEventListener('pointerup',   finishSeek);
-    document.addEventListener('mouseup',     finishSeek);
-    document.addEventListener('touchend',    finishSeek);
-    seek.addEventListener('pointercancel',   finishSeek);
-    seek.addEventListener('change',          finishSeek);
-  }
 
-  if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-
-  // Keyboard
-  root.tabIndex = 0;
-  root.addEventListener('keydown', function(e){
-    switch(e.key){
-      case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
-      case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-      case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-    }
-  });
-
-  // Fit wrapper to natural width
-  var wrap = root.closest('.mmv-wrap') || root;
-  function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px'); }
-  if (v.readyState >= 1) fitToNaturalWidth();
-  v.addEventListener('loadedmetadata', fitToNaturalWidth);
-
-  // Initial placement (match poster at end) after metadata, and on resize
-  v.addEventListener('loadedmetadata', function(){
-    measureWindow();
     if (seek){
+      seek.addEventListener('pointerdown', beginSeek);
+      seek.addEventListener('mousedown',   beginSeek);
+      seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+      seek.addEventListener('input', function(){
+        var nt = pctToTime(seek.value, v.duration);
+        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+        placeWindow(seek.value);
+        if (seekRAF) cancelAnimationFrame(seekRAF);
+        seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
+      });
+
+      document.addEventListener('pointerup',   finishSeek);
+      document.addEventListener('mouseup',     finishSeek);
+      document.addEventListener('touchend',    finishSeek);
+      seek.addEventListener('pointercancel',   finishSeek);
+      seek.addEventListener('change',          finishSeek);
+    }
+
+    /* ---- speed ---- */
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+
+    /* ---- keyboard ---- */
+    root.tabIndex = 0;
+    root.addEventListener('keydown', function(e){
+      switch(e.key){
+        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+      }
+    });
+
+    /* ---- fit wrapper to the video’s natural width ---- */
+    var wrap = root.closest('.mmv-wrap') || root;
+    function fitToNaturalWidth(){
+      if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
+    }
+
+    /* ---- initialize slider UI to END to match poster (UI only) ---- */
+    function setToEndUI(){
+      if (!seek || initialEndApplied) return;
       seek.value = 1000;
       root.style.setProperty('--mmv-fill', '100%');
       placeWindow(1000);
+      initialEndApplied = true;
     }
-  });
-  window.addEventListener('resize', function(){ measureWindow(); placeWindow(+seek?.value||0); });
 
-  // ---------- (optional) hillshade JS-only swap button support ----------
-  if (bHS && !bHS.dataset.bound) {
-    bHS.addEventListener('click', function(){
-      const next = bHS.getAttribute('aria-pressed') !== 'true';
-      bHS.setAttribute('aria-pressed', next ? 'true' : 'false');
+    v.addEventListener('loadedmetadata', function(){
+      measureWindow();
+      fitToNaturalWidth();
+      requestAnimationFrame(setToEndUI); // ensure rail has final width
     });
-    bHS.dataset.bound = '1';
+
+    if (v.readyState >= 1){ // cached metadata path
+      measureWindow();
+      fitToNaturalWidth();
+      requestAnimationFrame(setToEndUI);
+    }
+
+    window.addEventListener('resize', function(){
+      measureWindow();
+      if (!initialEndApplied) requestAnimationFrame(setToEndUI);
+      else placeWindow(seek ? seek.value : 1000);
+    });
+
+    /* ---- hillshade POST toggle (same flow as other tabs) ---- */
+    if (hsToggle && hsForm && hsInput){
+      if (hsTab) hsTab.value = 'multi_mission';
+      hsToggle.addEventListener('change', function(){
+        hsInput.value = this.checked ? 'show' : 'hide';
+        if (hsTab) hsTab.value = 'multi_mission';
+        hsForm.submit();
+      });
+    }
+
+    syncPlayIcon();
+    root.dataset.bound = '1';
   }
 
-  syncPlayIcon();
-  root.dataset.bound = '1';
-}
-
-
-  // --------------------------------------------------
-
-  syncPlayIcon();
-  root.dataset.bound = '1';
-}
-
-
+  /* --------------- boot / rebind --------------- */
   function initAll(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAll);
+  // if this tab is lazy-loaded, call after injecting its HTML:
   window.rebindMultiMissionHandlers = initAll;
 })();
 </script>
+
 
 
 
