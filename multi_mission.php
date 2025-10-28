@@ -1,8 +1,8 @@
 <?php
-// multi_mission.php — custom-controls video player with hillshade toggle (markup+styles only)
+// multi_mission.php — custom-controls video player with hillshade POST toggle
 
-// ---- Hillshade default (comes from php_init.php as 'show' | 'hide')
-$use_hs = (isset($hillshade) ? $hillshade === 'show' : true);
+// ---- Hillshade default from php_init.php ('show'|'hide')
+$use_hs = isset($hillshade) ? ($hillshade === 'show') : true;
 
 // ---- Non-HS assets
 $poster_no   = 'multi_mission_quicklooks/last_frame.webp';
@@ -35,11 +35,11 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
   }
 }
 
-// Unique id if you ever need one (JS binds by class, so not required)
+// Unique id (JS binds by class; this can be reused if you embed once)
 $PLAYER_ID = 'mmv-player';
 ?>
 <h3>Multi-mission SEC (1991–2025) — time series</h3>
-<p>This video shows the Antarctic ice sheet surface elevation change time series. Use the controls to play, scrub, change speed, or go fullscreen.</p>
+<p>This video shows the Antarctic ice sheet surface elevation change time series. Use the controls to play, scrub, change speed, or toggle hillshade.</p>
 
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
@@ -54,8 +54,6 @@ $PLAYER_ID = 'mmv-player';
   .mmv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
   .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
   .mmv-btn .material-icons{ font-size:20px; line-height:1 }
-  .mmv-btn--sm{ width:32px; height:32px; }
-  .mmv-btn[aria-pressed="true"]{ background:#eef5ff; border-color:#c9d7ee; }
 
   .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
   .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
@@ -75,6 +73,14 @@ $PLAYER_ID = 'mmv-player';
     pointer-events:none; width:64px;
   }
 
+  /* compact hillshade checkbox */
+  .mmv-hs{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 8px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer;
+  }
+  .mmv-hs:hover{ background:#eef5ff; border-color:#c9d7ee }
+  .mmv-hs .material-icons{ font-size:18px; line-height:1; }
+  .mmv-hs input{ display:none; } /* we’ll toggle via the label */
+
   @media (max-width:720px){ .mmv-bound{ font-size:12px } }
 </style>
 
@@ -87,60 +93,51 @@ $PLAYER_ID = 'mmv-player';
   data-end-label="<?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?>"
 >
   <div class="mmv-controls" role="group" aria-label="Video controls">
-  <div class="mmv-left">
-    <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
-      <span class="material-icons">play_arrow</span>
-    </button>
-  </div>
-
-  <div class="mmv-center">
-    <span class="mmv-bound mmv-start" data-role="label-start"><?php echo htmlspecialchars($startLabel, ENT_QUOTES); ?></span>
-    <div class="mmv-scrub-wrap">
-      <div class="mmv-window" aria-hidden="true"></div>
-      <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+    <div class="mmv-left">
+      <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
+        <span class="material-icons">play_arrow</span>
+      </button>
     </div>
-    <span class="mmv-bound mmv-end" data-role="label-end"><?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?></span>
-  </div>
 
-  <div class="mmv-right">
-    <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
-      <option value="0.5">0.5×</option>
-      <option value="0.75">0.75×</option>
-      <option value="1" selected>1×</option>
-      <option value="1.25">1.25×</option>
-      <option value="1.5">1.5×</option>
-      <option value="2">2×</option>
-    </select>
+    <div class="mmv-center">
+      <span class="mmv-bound mmv-start" data-role="label-start"><?php echo htmlspecialchars($startLabel, ENT_QUOTES); ?></span>
+      <div class="mmv-scrub-wrap">
+        <div class="mmv-window" aria-hidden="true"></div>
+        <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+      </div>
+      <span class="mmv-bound mmv-end" data-role="label-end"><?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?></span>
+    </div>
 
-    <!-- Compact hillshade toggle (far right) -->
-    <button
-      class="mmv-btn mmv-btn--sm"
-      data-role="hs"
-      aria-label="Hillshade"
-      aria-pressed="<?php echo $use_hs ? 'true' : 'false'; ?>"
-      title="Toggle hillshade"
-    >
-      <span class="material-icons">layers</span>
-    </button>
+    <div class="mmv-right">
+      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
+        <option value="0.5">0.5×</option>
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+
+      <!-- Compact hillshade toggle (POST, same scheme as other tabs) -->
+      <form id="hillshade-form" method="POST" style="display:none;">
+        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+        <input type="hidden" name="active_tab" value="multi_mission">
+      </form>
+      <label class="mmv-hs" for="toggle-hillshade" title="Toggle hillshade">
+        <span class="material-icons">layers</span>
+        Hill&nbsp;Shade
+        <input
+          id="toggle-hillshade"
+          type="checkbox"
+          <?php echo $use_hs ? 'checked' : ''; ?>
+          aria-label="Hill Shade"
+        >
+      </label>
+    </div>
   </div>
-</div>
 
   <div class="mmv-media">
-    <!-- Store BOTH variants in data-* so the JS can swap instantly -->
-    <video
-      preload="metadata"
-      playsinline
-      poster="<?php echo htmlspecialchars($poster, ENT_QUOTES); ?>"
-      data-poster-no="<?php echo htmlspecialchars($poster_no, ENT_QUOTES); ?>"
-      data-poster-hs="<?php echo htmlspecialchars($poster_hs, ENT_QUOTES); ?>"
-      data-src-av1-no="<?php echo htmlspecialchars($src_av1_no, ENT_QUOTES); ?>"
-      data-src-vp9-no="<?php echo htmlspecialchars($src_vp9_no, ENT_QUOTES); ?>"
-      data-src-h264-no="<?php echo htmlspecialchars($src_h264_no, ENT_QUOTES); ?>"
-      data-src-av1-hs="<?php echo htmlspecialchars($src_av1_hs, ENT_QUOTES); ?>"
-      data-src-vp9-hs="<?php echo htmlspecialchars($src_vp9_hs, ENT_QUOTES); ?>"
-      data-src-h264-hs="<?php echo htmlspecialchars($src_h264_hs, ENT_QUOTES); ?>"
-    >
-      <!-- Initial active sources (browser picks best supported) -->
+    <video preload="metadata" playsinline poster="<?php echo htmlspecialchars($poster, ENT_QUOTES); ?>">
       <source src="<?php echo htmlspecialchars($src_av1,  ENT_QUOTES); ?>" type="video/webm; codecs=av01.0.05M.08">
       <source src="<?php echo htmlspecialchars($src_vp9,  ENT_QUOTES); ?>" type="video/webm; codecs=vp9">
       <source src="<?php echo htmlspecialchars($src_h264, ENT_QUOTES); ?>" type="video/mp4">
@@ -148,6 +145,7 @@ $PLAYER_ID = 'mmv-player';
     </video>
   </div>
 </div>
+
 
 
 <script>
