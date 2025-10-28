@@ -39,11 +39,12 @@ $PLAYER_ID = 'mmv-player';
 ?>
 <h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
 <p>Each product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
-The periods are stepped by one month between products. The change is calculated from 
-multi-mission cross-calibrated radar altimetry between 1991 and 2025.
+The periods are stepped by one month between products. Each period of SEC is calculated from 
+multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetry between 1991 and 2025.
 </p>
 
-<p>Use the controls to play, scrub, and change speed.</p>
+<p>Each frame of the visualization contains a plot of a single product's 5-year SEC.
+    Use the controls to play, scrub, and change speed.</p>
 
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
