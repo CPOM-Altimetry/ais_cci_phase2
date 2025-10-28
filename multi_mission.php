@@ -1,7 +1,7 @@
 <?php
-// multi_mission.php — custom-controls video player using the SAME hillshade toggle UI as other tabs
+// multi_mission.php — custom-controls video player with in-row hillshade toggle
 
-// ---- Hillshade default comes from php_init.php ('show' | 'hide')
+// ---- Hillshade default from php_init.php ('show' | 'hide')
 $use_hs = (isset($hillshade) ? $hillshade === 'show' : true);
 
 // ---- Non-HS assets
@@ -22,7 +22,7 @@ $src_av1  = $use_hs ? $src_av1_hs  : $src_av1_no;
 $src_vp9  = $use_hs ? $src_vp9_hs  : $src_vp9_no;
 $src_h264 = $use_hs ? $src_h264_hs : $src_h264_no;
 
-// ---- Timeline labels (server-side so they appear immediately)
+// ---- Timeline labels (server-side)
 $timeline_json = __DIR__ . '/multi_mission_quicklooks/timeline.json';
 $startISO='1991-01'; $endISO='2025-12'; $startLabel='Jan 1991'; $endLabel='Dec 2025';
 if (is_file($timeline_json) && is_readable($timeline_json)) {
@@ -35,7 +35,6 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
   }
 }
 
-// Unique id if you ever need one (JS binds by class, so not required)
 $PLAYER_ID = 'mmv-player';
 ?>
 <h3>Multi-mission SEC (1991–2025) — time series</h3>
@@ -66,42 +65,20 @@ $PLAYER_ID = 'mmv-player';
   .mmv-range::-moz-range-track{ height:6px; background:var(--mmv-rail); border-radius:999px }
   .mmv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
 
-  /* custom oblong “5-year window” indicator */
   .mmv-window{
     position:absolute; top:50%; transform:translateY(-50%);
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
     pointer-events:none; width:64px;
   }
 
-  /* Optional: small layout tweak for the toolbar area below */
-  .image_section{ display:flex; justify-content:flex-end; margin:8px 0 6px; }
-  /* (The toggle’s CSS comes from your global main.css; no extra styles needed here.) */
-
+  /* Compact, in-row hillshade toggle: reuse your global toggle CSS, but lay it out inline here */
+  .mmv-controls .mmv-compact-toggle{ display:flex; align-items:center; gap:8px; margin-left:8px; }
+  .mmv-controls .mmv-compact-toggle .toggle-label{ margin:0; font-weight:600; }
+  .mmv-controls .mmv-compact-toggle .toggle-switch{ display:flex; align-items:center; gap:6px; }
+  .mmv-controls .mmv-compact-toggle .toggle-option{ font-size:13px; }
+  .mmv-controls .mmv-compact-toggle .switch{ transform:scale(.9); transform-origin:center; }
   @media (max-width:720px){ .mmv-bound{ font-size:12px } }
 </style>
-
-<!-- ===== Hill Shade toolbar (identical markup/IDs/classes as other tabs) ===== -->
-<div class="image_section">
-  <div class="toggle-container-left">
-    <div class="toggle-label">Hill Shade</div>
-    <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
-      <span class="toggle-option">hide</span>
-
-      <!-- Hidden POST form (ids must match your global JS) -->
-      <form id="hillshade-form" method="POST" style="display:none;">
-        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-        <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
-      </form>
-
-      <label class="switch">
-        <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
-        <span class="slider round"></span>
-      </label>
-      <span class="toggle-option tog_to_hide">show</span>
-    </div>
-  </div>
-</div>
-<!-- ===== /Hill Shade toolbar ===== -->
 
 <div
   class="mmv-wrap"
@@ -136,12 +113,30 @@ $PLAYER_ID = 'mmv-player';
         <option value="1.5">1.5×</option>
         <option value="2">2×</option>
       </select>
-      <!-- (No fullscreen / PiP per your preference) -->
+
+      <!-- === Hill Shade toggle (inline, same IDs as other tabs) === -->
+      <div class="mmv-compact-toggle">
+        <div class="toggle-label">Hill Shade</div>
+        <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
+          <span class="toggle-option">hide</span>
+
+          <form id="hillshade-form" method="POST" style="display:none;">
+            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+            <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
+          </form>
+
+          <label class="switch">
+            <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
+            <span class="slider round"></span>
+          </label>
+          <span class="toggle-option tog_to_hide">show</span>
+        </div>
+      </div>
+      <!-- === /Hill Shade toggle === -->
     </div>
   </div>
 
   <div class="mmv-media">
-    <!-- Keep both variants in data-* for potential future client-side swaps -->
     <video
       preload="metadata"
       playsinline
@@ -162,6 +157,8 @@ $PLAYER_ID = 'mmv-player';
     </video>
   </div>
 </div>
+
+
 
 
 
