@@ -12,12 +12,12 @@
             are shown below. 
         </p>
         <ul>
-            <li>SEC from the full time period of <b>individual satellite radar altimetry 
-                missions</b> (ERS-1, ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, Sentinel-3B)</li>
-            <li>SEC from the full period of the <b>laser altimetry mission</b> ICESat-2</li>
             <li>5-year SEC from <b>multi-mission</b> cross-calibrated radar altimetry from 
             1991 onwards, in monthly steps</li>
             <li>Annual dH from <b>multi-mission</b> cross-calibrated radar altimetry since 1991.</li>
+            <li>SEC from the full time period of <b>individual satellite radar altimetry 
+                missions</b> (ERS-1, ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, Sentinel-3B)</li>
+            <li>SEC from the full period of the <b>laser altimetry mission</b> ICESat-2</li>
         </ul>
         <p>Parameters for each product are provided on a <b>5km south polar stereographic 
             grid</b> (EPSG:3031) in NetCDF4 format.</p>
