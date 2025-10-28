@@ -187,31 +187,40 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
     var hsInput  = root.querySelector('#hillshade-input');
     var hsTab    = root.querySelector('#active_tab_input');
 
-    if (!v) return;
+    if (!v || !seek || !rail || !winEl) return;
 
     /* ---- timeline for window width ---- */
     var startISO = root.dataset.start || '1991-01';
     var endISO   = root.dataset.end   || '2025-12';
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
-    var totalM   = Math.max(1, monthsBetween(start, end)); // avoid divide by 0
+    var totalM   = Math.max(1, monthsBetween(start, end)); // guard
     var windowM  = 60; // 5 years
 
+    // sizing
     var railW = 0, windowW = 0, initialEndApplied = false;
 
-    function measureWindow(){
-      if (!seek || !winEl) return;
-      railW = seek.clientWidth || (rail ? rail.clientWidth : 0) || 0;
-      windowW = clamp(railW * (windowM / totalM), 16, railW); // at least visible
+    function measureRailWidth(){
+      // Prefer the actual visible rail width
+      const r = (rail.getBoundingClientRect().width || 0);
+      const s = (seek.getBoundingClientRect().width || 0);
+      railW = Math.max(r, s, 0);
+      // Compute the 5-year window width; keep it visible
+      windowW = clamp(railW * (windowM / totalM), 16, railW);
       winEl.style.width = windowW + 'px';
     }
 
     function placeWindow(pct){
-      if (!winEl || !seek) return;
-      var x = (pct/1000) * railW - windowW/2;
-      x = clamp(x, 0, Math.max(0, railW - windowW));
+      // pct: 0..1000
+      const x = clamp((pct/1000) * railW - windowW/2, 0, Math.max(0, railW - windowW));
       winEl.style.left = x + 'px';
     }
+
+    // Keep the “window” above the track and clicks going to the range
+    winEl.style.pointerEvents = 'none';
+    winEl.style.zIndex = '2';
+    seek.style.position = 'relative';
+    seek.style.zIndex = '1';
 
     /* ---- UI sync (during playback) ---- */
     var seeking = false, wasPlaying = false, seekRAF = null;
@@ -220,11 +229,9 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
       if (!isFinite(v.duration)) return;
       if (seeking) return;
       var p = (v.currentTime / v.duration) * 1000 || 0;
-      if (seek){
-        seek.value = clamp(Math.round(p), 0, 1000);
-        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
-        placeWindow(seek.value);
-      }
+      seek.value = clamp(Math.round(p), 0, 1000);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      placeWindow(seek.value);
     }
 
     v.addEventListener('timeupdate', updateProgress);
@@ -248,25 +255,23 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
       if (wasPlaying) v.play();
     }
 
-    if (seek){
-      seek.addEventListener('pointerdown', beginSeek);
-      seek.addEventListener('mousedown',   beginSeek);
-      seek.addEventListener('touchstart',  beginSeek, {passive:true});
+    seek.addEventListener('pointerdown', beginSeek);
+    seek.addEventListener('mousedown',   beginSeek);
+    seek.addEventListener('touchstart',  beginSeek, {passive:true});
 
-      seek.addEventListener('input', function(){
-        var nt = pctToTime(seek.value, v.duration);
-        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
-        placeWindow(seek.value);
-        if (seekRAF) cancelAnimationFrame(seekRAF);
-        seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
-      });
+    seek.addEventListener('input', function(){
+      var nt = pctToTime(seek.value, v.duration);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      placeWindow(seek.value);
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
+    });
 
-      document.addEventListener('pointerup',   finishSeek);
-      document.addEventListener('mouseup',     finishSeek);
-      document.addEventListener('touchend',    finishSeek);
-      seek.addEventListener('pointercancel',   finishSeek);
-      seek.addEventListener('change',          finishSeek);
-    }
+    document.addEventListener('pointerup',   finishSeek);
+    document.addEventListener('mouseup',     finishSeek);
+    document.addEventListener('touchend',    finishSeek);
+    seek.addEventListener('pointercancel',   finishSeek);
+    seek.addEventListener('change',          finishSeek);
 
     /* ---- speed ---- */
     if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
@@ -289,29 +294,45 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
 
     /* ---- initialize slider UI to END to match poster (UI only) ---- */
     function setToEndUI(){
-      if (!seek || initialEndApplied) return;
+      if (initialEndApplied) return;
       seek.value = 1000;
       root.style.setProperty('--mmv-fill', '100%');
       placeWindow(1000);
       initialEndApplied = true;
     }
 
+    // Measure rail + set initial UI immediately (so the window has size)
+    measureRailWidth();
+    setToEndUI();
+
+    // When metadata arrives (duration known), keep sizes and UI sane
     v.addEventListener('loadedmetadata', function(){
-      measureWindow();
       fitToNaturalWidth();
-      requestAnimationFrame(setToEndUI); // ensure rail has final width
+      // re-measure (layout may change after fonts/video aspect settle)
+      requestAnimationFrame(function(){
+        measureRailWidth();
+        if (initialEndApplied) placeWindow(seek.value);
+        else setToEndUI();
+      });
     });
 
-    if (v.readyState >= 1){ // cached metadata path
-      measureWindow();
+    if (v.readyState >= 1){
       fitToNaturalWidth();
-      requestAnimationFrame(setToEndUI);
+      requestAnimationFrame(function(){
+        measureRailWidth();
+        if (initialEndApplied) placeWindow(seek.value);
+        else setToEndUI();
+      });
     }
 
+    // React to container/viewport resizes
+    if ('ResizeObserver' in window){
+      const ro = new ResizeObserver(function(){ measureRailWidth(); placeWindow(seek.value || 1000); });
+      ro.observe(rail);
+    }
     window.addEventListener('resize', function(){
-      measureWindow();
-      if (!initialEndApplied) requestAnimationFrame(setToEndUI);
-      else placeWindow(seek ? seek.value : 1000);
+      measureRailWidth();
+      placeWindow(seek.value || 1000);
     });
 
     /* ---- hillshade POST toggle (same flow as other tabs) ---- */
@@ -331,10 +352,11 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   /* --------------- boot / rebind --------------- */
   function initAll(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAll);
-  // if this tab is lazy-loaded, call after injecting its HTML:
+  // for lazy-loaded tabs
   window.rebindMultiMissionHandlers = initAll;
 })();
 </script>
+
 
 
 
