@@ -119,20 +119,23 @@ $PLAYER_ID = 'mmv-player';
       </select>
 
       <!-- Compact hillshade toggle (POST, same scheme as other tabs) -->
-      <form id="hillshade-form" method="POST" style="display:none;">
+        <form id="hillshade-form" method="POST" style="display:none;">
         <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-        <input type="hidden" name="active_tab" value="multi_mission">
-      </form>
-      <label class="mmv-hs" for="toggle-hillshade" title="Toggle hillshade">
+        <!-- IMPORTANT: this id is what your global JS updates before submit -->
+        <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
+        </form>
+
+        <label class="mmv-hs" for="toggle-hillshade" title="Toggle hillshade">
         <span class="material-icons">layers</span>
         Hill&nbsp;Shade
         <input
-          id="toggle-hillshade"
-          type="checkbox"
-          <?php echo $use_hs ? 'checked' : ''; ?>
-          aria-label="Hill Shade"
+            id="toggle-hillshade"
+            type="checkbox"
+            <?php echo $use_hs ? 'checked' : ''; ?>
+            aria-label="Hill Shade"
         >
-      </label>
+        </label>
+
     </div>
   </div>
 
