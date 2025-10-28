@@ -38,8 +38,8 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
 $PLAYER_ID = 'mmv-player';
 ?>
 <h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
-<p>Each product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
-The periods are stepped by one month between products. Each period of SEC is calculated from 
+<p>Each netCDF4 product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
+The periods are stepped by one month between product files. Each period of SEC is calculated from 
 multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetry between 1991 and 2025.
 </p>
 
