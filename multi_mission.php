@@ -37,8 +37,13 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
 
 $PLAYER_ID = 'mmv-player';
 ?>
-<h3>Multi-mission SEC (1991–2025) — time series</h3>
-<p>This video shows the Antarctic ice sheet surface elevation change time series. Use the controls to play, scrub, and change speed.</p>
+<h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
+<p>Each product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
+The periods are stepped by one month between products. The change is calculated from 
+multi-mission cross-calibrated radar altimetry between 1991 and 2025.
+</p>
+
+<p>Use the controls to play, scrub, and change speed.</p>
 
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
