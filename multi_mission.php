@@ -127,84 +127,100 @@ $PLAYER_ID = 'mmv-player';
   function parseYYYYMM(s){ var m=(s||'').match(/^(\d{4})-(\d{2})$/); return m?{y:+m[1],m:+m[2]}:null; }
   function monthsBetween(a,b){ return (!a||!b)?null:((b.y-a.y)*12 + (b.m-a.m) + 1); }
 
+  // Init one player wrapper (.mmv-wrap)
   function initOnePlayer(root){
-  if (!root || root.dataset.bound === '1') return;
-  var v    = root.querySelector('video');
-  if (!v) return;
+    if (!root || root.dataset.bound === '1') return;
 
-  var bPlay = root.querySelector('[data-role="play"]');
-  var seek  = root.querySelector('[data-role="seek"]');
-  var speed = root.querySelector('[data-role="speed"]');
-  var bFs   = root.querySelector('[data-role="fs"]');
+    var v      = root.querySelector('video');
+    var bPlay  = root.querySelector('[data-role="play"]');
+    var seek   = root.querySelector('[data-role="seek"]');
+    var speed  = root.querySelector('[data-role="speed"]');
+    var bFs    = root.querySelector('[data-role="fs"]');
+    var winEl  = root.querySelector('.mmv-window'); // visual 5-yr window
+    if (!v || !seek) return;
 
-  // --- NEW flags
-  var userScrubbed = false;      // true once the user drags the slider
-  var initializedAtEnd = false;  // we set the slider to the end once
+    // Timeline labels (already rendered by PHP)
+    var startISO = root.dataset.start || '';
+    var endISO   = root.dataset.end   || '';
+    var start    = parseYYYYMM(startISO);
+    var end      = parseYYYYMM(endISO);
+    var totalMonths = monthsBetween(start, end) || 0;
 
-  function syncPlayIcon(){
-    if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
-  }
+    // State flags
+    var userScrubbed = false;     // becomes true after first manual drag
+    var initializedAtEnd = false; // we set the slider to the end once
+    var seeking = false, wasPlaying = false, seekRAF = null;
 
-  // --- Play/Pause with “start from 0 on first play” logic
-  function togglePlay(){
-    if (v.paused) {
-      // If we initialized the slider at the end and the user hasn't scrubbed,
-      // start the video from the beginning when Play is pressed.
-      if (initializedAtEnd && !userScrubbed && seek && +seek.value === 1000) {
-        v.currentTime = 0;
+    // ---- helpers
+    function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
+    function syncPlayIcon(){
+      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
+    }
+    function fsActive(){ return document.fullscreenElement === root; }
+    function syncFsIcon(){ if (bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+
+    // Position the visual “window” to match the slider
+    function positionWindow(){
+      if (!winEl || !seek) return;
+      var wrap = root.querySelector('.mmv-scrub-wrap');
+      if (!wrap) return;
+      var wrapW = wrap.clientWidth;
+      var w     = winEl.offsetWidth || 60;               // fallback
+      var pct   = Math.min(1, Math.max(0, seek.value/1000));
+      var left  = Math.round(pct * (wrapW - w));
+      winEl.style.left = left + 'px';
+    }
+
+    // ---- Play/Pause (start from 0 on first play if we pre-positioned at end)
+    function togglePlay(){
+      if (v.paused) {
+        if (initializedAtEnd && !userScrubbed && (+seek.value === 1000)) {
+          v.currentTime = 0;
+        }
+        v.play();
+      } else {
+        v.pause();
       }
-      v.play();
-    } else {
-      v.pause();
     }
-  }
-  if (bPlay) bPlay.addEventListener('click', togglePlay);
-  v.addEventListener('play',  syncPlayIcon);
-  v.addEventListener('pause', syncPlayIcon);
+    if (bPlay) bPlay.addEventListener('click', togglePlay);
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
 
-  // --- Metadata: set the slider UI to the **end** to match the poster
-  function onMeta(){
-    // Put the thumb at 100% (end); do NOT change currentTime here.
-    if (!initializedAtEnd && seek) {
-      initializedAtEnd = true;
-      seek.value = 1000;
-      root.style.setProperty('--mmv-fill', '100%');
+    // ---- When metadata is ready, set thumb to END (do not change currentTime)
+    function onMeta(){
+      if (!initializedAtEnd) {
+        initializedAtEnd = true;
+        seek.value = 1000;
+        root.style.setProperty('--mmv-fill', '100%');
+        positionWindow();
+      }
+      // Fit wrapper to natural video width (centers on wide screens)
+      if (v.videoWidth > 0) {
+        root.style.setProperty('--mmv-max', v.videoWidth + 'px');
+      }
     }
-  }
-  v.addEventListener('loadedmetadata', onMeta);
+    v.addEventListener('loadedmetadata', onMeta);
+    if (v.readyState >= 1) onMeta();
 
-  // --- Progress UI while playing (normal behaviour)
-  function updateProgress(){
-    if (!isFinite(v.duration)) return;
-    if (seek && !v.paused) {
-      var p = (v.currentTime / v.duration) * 1000 || 0;
-      seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-      root.style.setProperty('--mmv-fill', (p/10) + '%');
+    // ---- Update UI while playing
+    function updateProgress(){
+      if (!isFinite(v.duration)) return;
+      if (!v.paused) {
+        var p = (v.currentTime / v.duration) * 1000 || 0;
+        seek.value = Math.max(0, Math.min(1000, Math.round(p)));
+        root.style.setProperty('--mmv-fill', (p/10) + '%');
+        positionWindow();
+      }
     }
-  }
-  v.addEventListener('timeupdate', updateProgress);
+    v.addEventListener('timeupdate', updateProgress);
 
-  // --- Scrubbing
-  var seeking = false, wasPlaying = false, seekRAF = null;
-  function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
-
-  if (seek){
+    // ---- Scrubbing (Chrome-friendly: set currentTime inside rAF during input)
     function beginSeek(){
-      seeking = true; userScrubbed = true;
-      wasPlaying = !v.paused; if (wasPlaying) v.pause();
-    }
-    seek.addEventListener('pointerdown', beginSeek);
-    seek.addEventListener('mousedown',   beginSeek);
-    seek.addEventListener('touchstart',  beginSeek, {passive:true});
-
-    seek.addEventListener('input', function(){
+      seeking = true;
       userScrubbed = true;
-      var nt = pctToTime(seek.value);
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
-      if (seekRAF) cancelAnimationFrame(seekRAF);
-      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
-    });
-
+      wasPlaying = !v.paused;
+      if (wasPlaying) v.pause();
+    }
     function finishSeek(){
       if (!seeking) return;
       var nt = pctToTime(seek.value);
@@ -212,58 +228,61 @@ $PLAYER_ID = 'mmv-player';
       seeking = false;
       if (wasPlaying) v.play();
     }
+
+    seek.addEventListener('pointerdown', beginSeek);
+    seek.addEventListener('mousedown',   beginSeek);
+    seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+    seek.addEventListener('input', function(){
+      userScrubbed = true;
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      positionWindow();
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(function(){
+        v.currentTime = pctToTime(seek.value);
+      });
+    });
+
     document.addEventListener('pointerup',   finishSeek);
     document.addEventListener('mouseup',     finishSeek);
     document.addEventListener('touchend',    finishSeek);
     seek.addEventListener('pointercancel',   finishSeek);
     seek.addEventListener('change',          finishSeek);
-  }
 
-  // Speed + fullscreen (unchanged)
-  if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-  function fsActive(){ return document.fullscreenElement === root; }
-  function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
-  if (bFs){
-    bFs.addEventListener('click', function(){ fsActive()?document.exitFullscreen():root.requestFullscreen?.(); });
-    document.addEventListener('fullscreenchange', syncFsIcon);
-  }
-
-  // Keyboard (space/k, arrows, f)
-  root.tabIndex = 0;
-  root.addEventListener('keydown', function(e){
-    switch(e.key){
-      case ' ': case 'k': e.preventDefault(); togglePlay(); break;
-      case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-      case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-      case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+    // ---- Speed + Fullscreen
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+    if (bFs){
+      bFs.addEventListener('click', function(){ fsActive()?document.exitFullscreen():root.requestFullscreen?.(); });
+      document.addEventListener('fullscreenchange', syncFsIcon);
     }
-  });
 
-  // Fit wrapper to natural width (if you’re using this)
-  var wrap = root.closest('.mmv-wrap') || root;
-  function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px'); }
-  if (v.readyState >= 1) onMeta(), fitToNaturalWidth();
-  v.addEventListener('loadedmetadata', fitToNaturalWidth);
+    // ---- Keyboard shortcuts
+    root.tabIndex = 0;
+    root.addEventListener('keydown', function(e){
+      switch(e.key){
+        case ' ': case 'k': e.preventDefault(); togglePlay(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+      }
+    });
 
-  syncPlayIcon();
-  root.dataset.bound = '1';
-}
+    // Reposition the window on resize
+    window.addEventListener('resize', positionWindow);
 
+    // Initial UI sync
+    syncPlayIcon();
+    positionWindow();
+    root.dataset.bound = '1';
+  }
 
-  function initAllPlayers(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
+  function initAllPlayers(){
+    document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer);
+  }
+
   document.addEventListener('DOMContentLoaded', initAllPlayers);
+  // If you lazy-load this tab via fetch() + innerHTML:
   window.rebindMultiMissionHandlers = initAllPlayers;
 })();
-
-// Fit wrapper to natural width (avoid black gutters on wide screens)
-var wrap = root.closest('.mmv-wrap') || root;
-function fitToNaturalWidth(){
-  if (v.videoWidth > 0) {
-    // Set CSS variable the CSS rule reads
-    wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
-  }
-}
-if (v.readyState >= 1) fitToNaturalWidth();
-v.addEventListener('loadedmetadata', fitToNaturalWidth);
-
 </script>
+
