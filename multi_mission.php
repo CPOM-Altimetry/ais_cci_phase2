@@ -123,166 +123,206 @@ $PLAYER_ID = 'mmv-player';
 </div>
 
 <script>
-(function(){
-  function parseYYYYMM(s){ var m=(s||'').match(/^(\d{4})-(\d{2})$/); return m?{y:+m[1],m:+m[2]}:null; }
-  function monthsBetween(a,b){ return (!a||!b)?null:((b.y-a.y)*12 + (b.m-a.m) + 1); }
+(function () {
+  /* ---------- utilities ---------- */
+  function parseYYYYMM(s) {
+    const m = (s || '').match(/^(\d{4})-(\d{2})$/);
+    return m ? { y: +m[1], m: +m[2] } : null;
+  }
+  function monthsBetween(a, b) {
+    if (!a || !b) return 0;
+    // inclusive months so Jan 1991..Jan 1991 = 1
+    return (b.y - a.y) * 12 + (b.m - a.m) + 1;
+  }
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+  function pctToTime(pct, duration) { return (pct / 1000) * (duration || 0); }
+  function fmt(t) { if (!isFinite(t)||t<0) return '0:00'; const m=Math.floor(t/60), s=Math.floor(t%60); return m+':' + (s<10?'0':'') + s; }
 
-  // Init one player wrapper (.mmv-wrap)
-  function initOnePlayer(root){
+  /* ---------- core: one player ---------- */
+  function initOnePlayer(root) {
     if (!root || root.dataset.bound === '1') return;
 
-    var v      = root.querySelector('video');
-    var bPlay  = root.querySelector('[data-role="play"]');
-    var seek   = root.querySelector('[data-role="seek"]');
-    var speed  = root.querySelector('[data-role="speed"]');
-    var bFs    = root.querySelector('[data-role="fs"]');
-    var winEl  = root.querySelector('.mmv-window'); // visual 5-yr window
-    if (!v || !seek) return;
+    const v       = root.querySelector('video');
+    const seek    = root.querySelector('[data-role="seek"]');
+    const winEl   = root.querySelector('.mmv-window');
+    const playBtn = root.querySelector('[data-role="play"]');
+    const speed   = root.querySelector('[data-role="speed"]');
+    const fsBtn   = root.querySelector('[data-role="fs"]');
+    const scrubWrap = root.querySelector('.mmv-scrub-wrap');
+    const curTxt  = root.querySelector('[data-role="cur"]');   // may not exist (ok)
+    const durTxt  = root.querySelector('[data-role="dur"]');   // may not exist (ok)
 
-    // Timeline labels (already rendered by PHP)
-    var startISO = root.dataset.start || '';
-    var endISO   = root.dataset.end   || '';
-    var start    = parseYYYYMM(startISO);
-    var end      = parseYYYYMM(endISO);
-    var totalMonths = monthsBetween(start, end) || 0;
+    if (!v || !seek || !scrubWrap) return;
 
-    // State flags
-    var userScrubbed = false;     // becomes true after first manual drag
-    var initializedAtEnd = false; // we set the slider to the end once
-    var seeking = false, wasPlaying = false, seekRAF = null;
+    // Timeline window sizing (5 years across total span)
+    const startISO = root.dataset.start; // "YYYY-MM" (server injected)
+    const endISO   = root.dataset.end;   // "YYYY-MM"
+    const startObj = parseYYYYMM(startISO);
+    const endObj   = parseYYYYMM(endISO);
+    const totalMonths = Math.max(1, monthsBetween(startObj, endObj));
+    const windowMonths = 60; // 5 years
 
-    // ---- helpers
-    function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
-    function syncPlayIcon(){
-      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
-    }
-    function fsActive(){ return document.fullscreenElement === root; }
-    function syncFsIcon(){ if (bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+    let seeking = false;
+    let wasPlaying = false;
+    let seekRAF = null;
+    let initializedAtEnd = false;
 
-    // Position the visual “window” to match the slider
-    function positionWindow(){
-      if (!winEl || !seek) return;
-      var wrap = root.querySelector('.mmv-scrub-wrap');
-      if (!wrap) return;
-      var wrapW = wrap.clientWidth;
-      var w     = winEl.offsetWidth || 60;               // fallback
-      var pct   = Math.min(1, Math.max(0, seek.value/1000));
-      var left  = Math.round(pct * (wrapW - w));
-      winEl.style.left = left + 'px';
+    function syncPlayIcon() {
+      if (!playBtn) return;
+      playBtn.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
     }
 
-    // ---- Play/Pause (start from 0 on first play if we pre-positioned at end)
-    function togglePlay(){
-      if (v.paused) {
-        if (initializedAtEnd && !userScrubbed && (+seek.value === 1000)) {
-          v.currentTime = 0;
-        }
-        v.play();
-      } else {
-        v.pause();
+    function setFillFromSeek() {
+      root.style.setProperty('--mmv-fill', (seek.value / 10) + '%');
+    }
+
+    // Compute and place the visual 5-year window (centered on thumb)
+    function layoutWindow() {
+      if (!winEl) return;
+      const wrapRect = scrubWrap.getBoundingClientRect();
+      const trackW   = wrapRect.width;
+      const pxWidth  = clamp(trackW * (windowMonths / totalMonths), 8, trackW); // sensible min
+      const pct      = (seek.value / 1000);                                     // 0..1
+      let leftPx     = pct * trackW - pxWidth / 2;
+      leftPx = clamp(leftPx, 0, trackW - pxWidth);
+
+      winEl.style.width = pxWidth + 'px';
+      winEl.style.left  = leftPx + 'px';
+    }
+
+    // Update seek UI while video plays
+    function onTimeUpdate() {
+      if (!isFinite(v.duration)) return;
+      if (!seeking) {
+        const p = (v.currentTime / v.duration) * 1000 || 0;
+        seek.value = clamp(Math.round(p), 0, 1000);
+        setFillFromSeek();
+        layoutWindow();
       }
+      if (curTxt) curTxt.textContent = fmt(v.currentTime);
     }
-    if (bPlay) bPlay.addEventListener('click', togglePlay);
-    v.addEventListener('play',  syncPlayIcon);
-    v.addEventListener('pause', syncPlayIcon);
 
-    // ---- When metadata is ready, set thumb to END (do not change currentTime)
-    function onMeta(){
+    // Place the slider at the **end** to match your poster
+    function setSliderToEnd() {
+      seek.value = 1000;
+      setFillFromSeek();
+      layoutWindow();
+    }
+
+    // Metadata available
+    function onMeta() {
+      if (durTxt) durTxt.textContent = fmt(v.duration);
+      // Do two RAFs to ensure layout boxes are ready before we position the window at end.
       if (!initializedAtEnd) {
         initializedAtEnd = true;
-        seek.value = 1000;
-        root.style.setProperty('--mmv-fill', '100%');
-        positionWindow();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setSliderToEnd();
+          });
+        });
+      } else {
+        layoutWindow();
       }
-      // Fit wrapper to natural video width (centers on wide screens)
+      // Size wrapper to natural width (centers + removes gutters on wide screens)
       if (v.videoWidth > 0) {
         root.style.setProperty('--mmv-max', v.videoWidth + 'px');
       }
     }
-    v.addEventListener('loadedmetadata', onMeta);
-    if (v.readyState >= 1) onMeta();
 
-    // ---- Update UI while playing
-    function updateProgress(){
-      if (!isFinite(v.duration)) return;
-      if (!v.paused) {
-        var p = (v.currentTime / v.duration) * 1000 || 0;
-        seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-        root.style.setProperty('--mmv-fill', (p/10) + '%');
-        positionWindow();
-      }
-    }
-    v.addEventListener('timeupdate', updateProgress);
-
-    // ---- Scrubbing (Chrome-friendly: set currentTime inside rAF during input)
-    function beginSeek(){
+    // Seeking UX (Chrome/Safari friendly)
+    function beginSeek() {
       seeking = true;
-      userScrubbed = true;
       wasPlaying = !v.paused;
       if (wasPlaying) v.pause();
     }
-    function finishSeek(){
+    function liveSeek() {
+      setFillFromSeek();
+      layoutWindow();
+      const nt = pctToTime(seek.value, v.duration);
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(() => { v.currentTime = nt; });
+    }
+    function finishSeek() {
       if (!seeking) return;
-      var nt = pctToTime(seek.value);
-      v.currentTime = nt;
       seeking = false;
+      const nt = pctToTime(seek.value, v.duration);
+      v.currentTime = nt;
       if (wasPlaying) v.play();
     }
 
+    // Play/Pause button
+    function togglePlay() { v.paused ? v.play() : v.pause(); }
+
+    // Fullscreen helpers
+    function fsActive() { return document.fullscreenElement === root; }
+    function syncFsIcon() {
+      if (!fsBtn) return;
+      fsBtn.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen';
+    }
+
+    /* ---- listeners ---- */
+    v.addEventListener('loadedmetadata', onMeta);
+    v.addEventListener('timeupdate', onTimeUpdate);
+    v.addEventListener('progress', onTimeUpdate);
+
+    if (playBtn) playBtn.addEventListener('click', togglePlay);
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
+
+    // Pointer/Mouse/Touch seek
     seek.addEventListener('pointerdown', beginSeek);
     seek.addEventListener('mousedown',   beginSeek);
-    seek.addEventListener('touchstart',  beginSeek, {passive:true});
+    seek.addEventListener('touchstart',  beginSeek, { passive: true });
 
-    seek.addEventListener('input', function(){
-      userScrubbed = true;
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
-      positionWindow();
-      if (seekRAF) cancelAnimationFrame(seekRAF);
-      seekRAF = requestAnimationFrame(function(){
-        v.currentTime = pctToTime(seek.value);
+    seek.addEventListener('input',  liveSeek);
+    seek.addEventListener('change', finishSeek);
+    document.addEventListener('pointerup', finishSeek);
+    document.addEventListener('mouseup',   finishSeek);
+    document.addEventListener('touchend',  finishSeek);
+
+    // Speed
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value || '1'); });
+
+    // Fullscreen
+    if (fsBtn) {
+      fsBtn.addEventListener('click', function () {
+        if (!fsActive()) { root.requestFullscreen?.(); }
+        else { document.exitFullscreen?.(); }
       });
-    });
-
-    document.addEventListener('pointerup',   finishSeek);
-    document.addEventListener('mouseup',     finishSeek);
-    document.addEventListener('touchend',    finishSeek);
-    seek.addEventListener('pointercancel',   finishSeek);
-    seek.addEventListener('change',          finishSeek);
-
-    // ---- Speed + Fullscreen
-    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-    if (bFs){
-      bFs.addEventListener('click', function(){ fsActive()?document.exitFullscreen():root.requestFullscreen?.(); });
       document.addEventListener('fullscreenchange', syncFsIcon);
     }
 
-    // ---- Keyboard shortcuts
+    // Keyboard
     root.tabIndex = 0;
-    root.addEventListener('keydown', function(e){
-      switch(e.key){
+    root.addEventListener('keydown', function (e) {
+      switch (e.key) {
         case ' ': case 'k': e.preventDefault(); togglePlay(); break;
-        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, (v.currentTime || 0) - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration || 0, (v.currentTime || 0) + 5); break;
+        case 'f': fsActive() ? document.exitFullscreen?.() : root.requestFullscreen?.(); break;
       }
     });
 
-    // Reposition the window on resize
-    window.addEventListener('resize', positionWindow);
+    // Recompute window on resize (track width changes)
+    window.addEventListener('resize', layoutWindow, { passive: true });
 
-    // Initial UI sync
+    // If metadata already ready (Safari sometimes), apply now
+    if (v.readyState >= 1) onMeta();
+
     syncPlayIcon();
-    positionWindow();
     root.dataset.bound = '1';
   }
 
-  function initAllPlayers(){
+  /* ---------- init all players on page ---------- */
+  function initAllPlayers() {
     document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer);
   }
 
   document.addEventListener('DOMContentLoaded', initAllPlayers);
-  // If you lazy-load this tab via fetch() + innerHTML:
+
+  // For lazy-loaded tabs: call this right after you inject multi_mission.php HTML
   window.rebindMultiMissionHandlers = initAllPlayers;
 })();
 </script>
+
 
