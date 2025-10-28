@@ -242,60 +242,87 @@ $PLAYER_ID = 'mmv-player';
   if (v.readyState >= 1) fitToNaturalWidth();
   v.addEventListener('loadedmetadata', fitToNaturalWidth);
 
-  // --------- NEW: Hillshade toggle wiring ----------
-  function can(type){ try { return !!v.canPlayType(type); } catch(e){ return false; } }
-  function pickBest(hs){
-    // read from data-* (set in your PHP markup)
-    var a1  = v.dataset[hs ? 'srcAv1Hs'  : 'srcAv1No']   || '';
-    var vp9 = v.dataset[hs ? 'srcVp9Hs'  : 'srcVp9No']   || '';
-    var mp4 = v.dataset[hs ? 'srcH264Hs' : 'srcH264No']  || '';
-    if (can('video/webm; codecs="av01.0.05M.08"') && a1) return a1;
-    if (can('video/webm; codecs="vp9"') && vp9)          return vp9;
-    return mp4; // final fallback
-  }
-  function posterFor(hs){
-    return v.dataset[hs ? 'posterHs' : 'posterNo'] || '';
-  }
+  // --------- NEW: Hillshade toggle wiring (robust) ----------
+function can(type){ try { return !!v.canPlayType(type); } catch(e){ return false; } }
+function pickBestUrl(hs){
+  // data-attr names => dataset keys
+  const a1  = v.dataset[hs ? 'srcAv1Hs'  : 'srcAv1No']   || '';
+  const vp9 = v.dataset[hs ? 'srcVp9Hs'  : 'srcVp9No']   || '';
+  const mp4 = v.dataset[hs ? 'srcH264Hs' : 'srcH264No']  || '';
 
-  function swapHillshade(hsOn){
-    const wasPlaying = !v.paused;
-    const t = v.currentTime || 0;
+  if (a1  && can('video/webm; codecs="av01.0.05M.08"')) return {url:a1,  type:'video/webm; codecs=av01.0.05M.08'};
+  if (vp9 && can('video/webm; codecs="vp9"'))          return {url:vp9, type:'video/webm; codecs=vp9'};
+  if (mp4)                                              return {url:mp4, type:'video/mp4'};
+  // last resort: whatever exists
+  if (vp9) return {url:vp9, type:'video/webm'};
+  if (a1)  return {url:a1,  type:'video/webm'};
+  return {url:'', type:''};
+}
 
-    // Update button state
-    if (bHS) bHS.setAttribute('aria-pressed', hsOn ? 'true' : 'false');
+function setPoster(hs){
+  const p = v.dataset[hs ? 'posterHs' : 'posterNo'] || '';
+  if (p) v.setAttribute('poster', p);
+}
 
-    // Update poster
-    const p = posterFor(hsOn);
-    if (p) v.setAttribute('poster', p);
+function rebuildSources(bestPrimary, hs){
+  // wipe any existing <source> nodes & src
+  while (v.firstChild) v.removeChild(v.firstChild);
+  v.removeAttribute('src');
 
-    // Replace the active source in a Safari/Chrome-friendly way:
-    const best = pickBest(hsOn);
-    if (!best) return;
+  // Build a preferred list (primary first, then the other candidates)
+  const a1  = v.dataset[hs ? 'srcAv1Hs'  : 'srcAv1No']   || '';
+  const vp9 = v.dataset[hs ? 'srcVp9Hs'  : 'srcVp9No']   || '';
+  const mp4 = v.dataset[hs ? 'srcH264Hs' : 'srcH264No']  || '';
 
-    v.pause();
-    // Remove any <source> children to avoid stale picks
-    while (v.firstChild) v.removeChild(v.firstChild);
-    v.removeAttribute('src');
-    v.src = best;
-    v.load();
+  const order = [];
+  if (bestPrimary.url) order.push(bestPrimary);
+  // add remaining (no dups)
+  if (bestPrimary.url !== a1 && a1)   order.push({url:a1,  type:'video/webm; codecs=av01.0.05M.08'});
+  if (bestPrimary.url !== vp9 && vp9) order.push({url:vp9, type:'video/webm; codecs=vp9'});
+  if (bestPrimary.url !== mp4 && mp4) order.push({url:mp4, type:'video/mp4'});
 
-    // Restore time & state after metadata is ready
-    v.addEventListener('loadedmetadata', function onLM(){
-      v.removeEventListener('loadedmetadata', onLM);
-      try { v.currentTime = Math.min(t, v.duration || t); } catch(e){}
-      if (wasPlaying) v.play();
-      // Keep the slider roughly where it was
-      updateProgress();
-    }, { once:true });
-  }
+  order.forEach(s => {
+    const el = document.createElement('source');
+    el.src = s.url;
+    if (s.type) el.type = s.type;
+    v.appendChild(el);
+  });
+}
 
-  if (bHS && !bHS.dataset.bound) {
-    bHS.addEventListener('click', function(){
-      const next = bHS.getAttribute('aria-pressed') !== 'true';
-      swapHillshade(next);
-    });
-    bHS.dataset.bound = '1';
-  }
+function swapHillshade(hsOn){
+  const wasPlaying = !v.paused;
+  const t = v.currentTime || 0;
+
+  // update button state + poster
+  if (bHS) bHS.setAttribute('aria-pressed', hsOn ? 'true' : 'false');
+  setPoster(hsOn);
+
+  // pick primary + rebuild <source> list
+  const best = pickBestUrl(hsOn);
+  if (!best.url) return;
+
+  v.pause();
+  rebuildSources(best, hsOn);
+
+  // reload and restore position
+  v.load();
+  v.addEventListener('loadedmetadata', function onLM(){
+    v.removeEventListener('loadedmetadata', onLM);
+    try { v.currentTime = Math.min(t, v.duration || t); } catch(_) {}
+    if (wasPlaying) v.play();
+    // re-sync slider
+    if (typeof updateProgress === 'function') updateProgress();
+  }, { once:true });
+}
+
+if (bHS && !bHS.dataset.bound) {
+  bHS.addEventListener('click', function(){
+    const next = bHS.getAttribute('aria-pressed') !== 'true';
+    swapHillshade(next);
+  });
+  bHS.dataset.bound = '1';
+}
+
   // --------------------------------------------------
 
   syncPlayIcon();
