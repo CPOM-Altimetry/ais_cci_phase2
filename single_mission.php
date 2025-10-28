@@ -1,13 +1,5 @@
 <h3>Single RA Mission SEC</h3>
 
-        <style>
-        .float-right-img{
-            float:right; position:relative; top:-60px;
-            max-width:100px; width:100%; height:auto;
-        }
-        @media (max-width:600px){ .float-right-img{ float:none; margin:10px 0; } }
-        </style>
-
         <img id="single_mission_logo" src="images/single_mission_logo.png" alt="Single mission logo" class="float-right-img">
 
         <p>These products show the ice sheet surface elevation change (SEC, also known as dh/dt) measured over the full period
