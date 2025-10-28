@@ -117,7 +117,6 @@ $PLAYER_ID = 'mmv-player';
       <!-- === Hill Shade toggle (inline, same IDs as other tabs) === -->
       <div class="mmv-compact-toggle">
         <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
-          <span class="toggle-option">hide</span>
 
           <form id="hillshade-form" method="POST" style="display:none;">
             <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'HS' : 'hide'; ?>">
