@@ -121,7 +121,7 @@ $PLAYER_ID = 'mmv-player';
           <span class="toggle-option">hide</span>
 
           <form id="hillshade-form" method="POST" style="display:none;">
-            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+            <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : ''; ?>">
             <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
           </form>
 
