@@ -128,151 +128,127 @@ $PLAYER_ID = 'mmv-player';
   function monthsBetween(a,b){ return (!a||!b)?null:((b.y-a.y)*12 + (b.m-a.m) + 1); }
 
   function initOnePlayer(root){
-    if (!root || root.dataset.bound === '1') return;
+  if (!root || root.dataset.bound === '1') return;
+  var v    = root.querySelector('video');
+  if (!v) return;
 
-    var v     = root.querySelector('video');
-    var bPlay = root.querySelector('[data-role="play"]');
-    var seek  = root.querySelector('[data-role="seek"]');
-    var speed = root.querySelector('[data-role="speed"]');
-    var bFs   = root.querySelector('[data-role="fs"]');
-    var windowEl = root.querySelector('.mmv-window');
+  var bPlay = root.querySelector('[data-role="play"]');
+  var seek  = root.querySelector('[data-role="seek"]');
+  var speed = root.querySelector('[data-role="speed"]');
+  var bFs   = root.querySelector('[data-role="fs"]');
 
-    var startISO = root.dataset.start || '1991-01';
-    var endISO   = root.dataset.end   || '2025-12';
-    var fiveYears = 5;
+  // --- NEW flags
+  var userScrubbed = false;      // true once the user drags the slider
+  var initializedAtEnd = false;  // we set the slider to the end once
 
-    // Toggle play/pause (with promise catch for Chrome)
-    function syncPlayIcon(){ bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause'; }
-    bPlay.addEventListener('click', function(){
-      if (v.paused) {
-        v.play().then(syncPlayIcon).catch(function(e){ console.warn('play() rejected:', e); });
-      } else {
-        v.pause();
-      }
-    });
-    v.addEventListener('play',  syncPlayIcon);
-    v.addEventListener('pause', syncPlayIcon);
-
-    // Also allow clicking the video to toggle
-    v.addEventListener('click', function(){
-      if (v.paused) {
-        v.play().then(syncPlayIcon).catch(function(e){ console.warn('play() rejected:', e); });
-      } else {
-        v.pause();
-      }
-    });
-
-    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-
-    function fsActive(){ return document.fullscreenElement === root; }
-    function syncFsIcon(){ bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
-    bFs.addEventListener('click', function(){
-      if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
-      else{ if (document.exitFullscreen) document.exitFullscreen(); }
-    });
-    document.addEventListener('fullscreenchange', syncFsIcon);
-
-    root.tabIndex = 0;
-    root.addEventListener('keydown', function(e){
-      switch(e.key){
-        case ' ': case 'k': e.preventDefault(); if (v.paused) v.play().catch(()=>{}); else v.pause(); break;
-        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
-      }
-    });
-
-    // Seek + custom window logic
-    var seeking=false, wasPlaying=false, seekRAF=null;
-    function durationSafe(){ return isFinite(v.duration) && v.duration>0 ? v.duration : 1; }
-    function pctToTime(pct){ return (pct/1000) * durationSafe(); }
-    function timeToPct(t){ return (t / durationSafe()) * 1000; }
-
-    function updateProgress(){
-      if (!isFinite(v.duration)) return;
-      if (!seeking && seek){
-        var p = timeToPct(v.currentTime) || 0;
-        seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-        root.style.setProperty('--mmv-fill', (p/10) + '%');
-        positionWindowFromSeek();
-      }
-    }
-    v.addEventListener('timeupdate', updateProgress);
-    v.addEventListener('progress',   updateProgress);
-    v.addEventListener('loadedmetadata', updateProgress);
-
-    function sizeWindow(){
-      if (!seek || !windowEl) return;
-      var s = parseYYYYMM(startISO);
-      var e = parseYYYYMM(endISO);
-      var months = monthsBetween(s,e);
-      var years = months ? (months/12) : 35;
-      var frac = fiveYears / years;
-      var trackW = seek.clientWidth || 200;
-      var px = Math.max(16, Math.round(trackW * frac));
-      windowEl.style.width = px + 'px';
-    }
-    function positionWindowFromSeek(){
-      if (!seek || !windowEl) return;
-      var trackW = seek.clientWidth || 200;
-      var knobCenter = (seek.value/1000) * trackW;
-      var winW = windowEl.offsetWidth || 0;
-      var left = Math.round(knobCenter - winW/2);
-      left = Math.max(0, Math.min(trackW - winW, left));
-      windowEl.style.left = left + 'px';
-    }
-    window.addEventListener('resize', function(){ sizeWindow(); positionWindowFromSeek(); });
-
-    if (seek){
-      function beginSeek(){
-        seeking = true;
-        wasPlaying = !v.paused;
-        if (wasPlaying) v.pause();
-      }
-      seek.addEventListener('pointerdown', beginSeek);
-      seek.addEventListener('mousedown',   beginSeek);
-      seek.addEventListener('touchstart',  beginSeek, {passive:true});
-
-      seek.addEventListener('input', function(){
-        var nt = pctToTime(seek.value);
-        if (seekRAF) cancelAnimationFrame(seekRAF);
-        seekRAF = requestAnimationFrame(function(){
-          v.currentTime = nt;            // show frame while dragging
-          positionWindowFromSeek();
-        });
-        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
-      });
-
-      function finishSeek(){
-        if (!seeking) return;
-        var nt = pctToTime(seek.value);
-        v.currentTime = nt;
-        seeking = false;
-        if (wasPlaying) {
-          v.play().catch(()=>{});        // resume safely
-        }
-      }
-      document.addEventListener('pointerup',   finishSeek);
-      document.addEventListener('mouseup',     finishSeek);
-      document.addEventListener('touchend',    finishSeek);
-      seek.addEventListener('pointercancel',   finishSeek);
-      seek.addEventListener('change',          finishSeek);
-
-      setTimeout(function(){ sizeWindow(); positionWindowFromSeek(); }, 0);
-    }
-
-    // Optional: fit wrapper to natural width (removes black gutters)
-    var wrap = root;
-    function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
-    if (v.readyState >= 1) fitToNaturalWidth();
-    v.addEventListener('loadedmetadata', fitToNaturalWidth);
-
-    // Initial icon
-    syncPlayIcon();
-    if (v.readyState >= 1) updateProgress();
-
-    root.dataset.bound = '1';
+  function syncPlayIcon(){
+    if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
   }
+
+  // --- Play/Pause with “start from 0 on first play” logic
+  function togglePlay(){
+    if (v.paused) {
+      // If we initialized the slider at the end and the user hasn't scrubbed,
+      // start the video from the beginning when Play is pressed.
+      if (initializedAtEnd && !userScrubbed && seek && +seek.value === 1000) {
+        v.currentTime = 0;
+      }
+      v.play();
+    } else {
+      v.pause();
+    }
+  }
+  if (bPlay) bPlay.addEventListener('click', togglePlay);
+  v.addEventListener('play',  syncPlayIcon);
+  v.addEventListener('pause', syncPlayIcon);
+
+  // --- Metadata: set the slider UI to the **end** to match the poster
+  function onMeta(){
+    // Put the thumb at 100% (end); do NOT change currentTime here.
+    if (!initializedAtEnd && seek) {
+      initializedAtEnd = true;
+      seek.value = 1000;
+      root.style.setProperty('--mmv-fill', '100%');
+    }
+  }
+  v.addEventListener('loadedmetadata', onMeta);
+
+  // --- Progress UI while playing (normal behaviour)
+  function updateProgress(){
+    if (!isFinite(v.duration)) return;
+    if (seek && !v.paused) {
+      var p = (v.currentTime / v.duration) * 1000 || 0;
+      seek.value = Math.max(0, Math.min(1000, Math.round(p)));
+      root.style.setProperty('--mmv-fill', (p/10) + '%');
+    }
+  }
+  v.addEventListener('timeupdate', updateProgress);
+
+  // --- Scrubbing
+  var seeking = false, wasPlaying = false, seekRAF = null;
+  function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
+
+  if (seek){
+    function beginSeek(){
+      seeking = true; userScrubbed = true;
+      wasPlaying = !v.paused; if (wasPlaying) v.pause();
+    }
+    seek.addEventListener('pointerdown', beginSeek);
+    seek.addEventListener('mousedown',   beginSeek);
+    seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+    seek.addEventListener('input', function(){
+      userScrubbed = true;
+      var nt = pctToTime(seek.value);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
+    });
+
+    function finishSeek(){
+      if (!seeking) return;
+      var nt = pctToTime(seek.value);
+      v.currentTime = nt;
+      seeking = false;
+      if (wasPlaying) v.play();
+    }
+    document.addEventListener('pointerup',   finishSeek);
+    document.addEventListener('mouseup',     finishSeek);
+    document.addEventListener('touchend',    finishSeek);
+    seek.addEventListener('pointercancel',   finishSeek);
+    seek.addEventListener('change',          finishSeek);
+  }
+
+  // Speed + fullscreen (unchanged)
+  if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+  function fsActive(){ return document.fullscreenElement === root; }
+  function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+  if (bFs){
+    bFs.addEventListener('click', function(){ fsActive()?document.exitFullscreen():root.requestFullscreen?.(); });
+    document.addEventListener('fullscreenchange', syncFsIcon);
+  }
+
+  // Keyboard (space/k, arrows, f)
+  root.tabIndex = 0;
+  root.addEventListener('keydown', function(e){
+    switch(e.key){
+      case ' ': case 'k': e.preventDefault(); togglePlay(); break;
+      case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+      case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+      case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+    }
+  });
+
+  // Fit wrapper to natural width (if you’re using this)
+  var wrap = root.closest('.mmv-wrap') || root;
+  function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px'); }
+  if (v.readyState >= 1) onMeta(), fitToNaturalWidth();
+  v.addEventListener('loadedmetadata', fitToNaturalWidth);
+
+  syncPlayIcon();
+  root.dataset.bound = '1';
+}
+
 
   function initAllPlayers(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAllPlayers);
