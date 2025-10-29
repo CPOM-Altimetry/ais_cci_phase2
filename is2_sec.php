@@ -63,7 +63,7 @@ if ($imagefile && preg_match('/(\d{8})-(\d{8})/', $imagefile, $m)) {
                             <?php echo htmlspecialchars($ql_param_str, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
                         </button>
                         <div class="w3-dropdown-content w3-bar-block w3-card-4">
-                            <?php $base = "index.php?show_single_mission=0&active_tab=is2_sec;" ?>
+                            <?php $base = "index.php?show_single_mission=0&active_tab=is2_sec"; ?>
                             <a href="<?php echo $base; ?>&ql_param=sec#tab_row"              class="w3-bar-item w3-button">Surface Elevation Change (SEC)</a>
                             <a href="<?php echo $base; ?>&ql_param=sec_uncertainty#tab_row" class="w3-bar-item w3-button">Uncertainty of SEC</a>
                             <a href="<?php echo $base; ?>&ql_param=surface_type#tab_row"    class="w3-bar-item w3-button">Surface Type</a>
