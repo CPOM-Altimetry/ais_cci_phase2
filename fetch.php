@@ -135,7 +135,8 @@ $size = @filesize($abs);
 
 header('Content-Type: ' . $mime);
 if ($size !== false) header('Content-Length: ' . (string)$size);
-header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+header('Content-Disposition: attachment; filename="' . $downloadName . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
+
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: private, max-age=3600, must-revalidate');
 header('Accept-Ranges: none');
