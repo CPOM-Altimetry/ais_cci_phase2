@@ -109,8 +109,11 @@ function format_bytes($bytes){
 </div>
 <!-- End of the new two-column section -->
 
-<p>All netcdf products contain parameters on a 5km south polar stereographic (EPSG:3031) grid.</p>
-
+<div id="grid_details">
+<p>
+  <svg xmlns="http://www.w3.org/2000/svg" height="48px" viewBox="0 -960 960 960" width="48px" fill="#274483"><path d="M180-120q-24 0-42-18t-18-42v-600q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h160v-160H180v160Zm220 0h160v-160H400v160Zm220 0h160v-160H620v160ZM180-400h160v-160H180v160Zm220 0h160v-160H400v160Zm220 0h160v-160H620v160ZM180-620h160v-160H180v160Zm220 0h160v-160H400v160Zm220 0h160v-160H620v160Z"/></svg>
+All netcdf products contain parameters on a 5km south polar stereographic (EPSG:3031) grid.</p>
+</div>
 <?php
 //===================================================================================
 // Build rows for Multi-Mission RA
@@ -142,8 +145,10 @@ foreach ($products as $id => $meta) {
 //usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 ?>
 
-<h3>Multi-Mission 5-year SEC Downloads</h3>
-<p>Each file contains a 5-year period. The <b>first file</b> shown is the latest 5-year period. 
+<h3>Multi-Mission 5-year SEC Product Downloads</h3>
+<p>Each file contains the gridded surface elevation change and uncertainty from a 5-year period, calculated from cross-calibrated 
+  radar altimetry missions. 
+  The <b>first file</b> shown is the latest 5-year period. 
 The <b>second file</b>
   is a zip of all 5-year period netcdf files since 1991, stepped by 1 month.</p>
 <table class="downloads">
