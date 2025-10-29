@@ -60,7 +60,7 @@ if (!is_file($abs) || !is_readable($abs)) {
 }
 
 // Nice filename in header
-$downloadName = hfn($meta['label'] ?? basename($rel));
+$downloadName = hfn(basename($rel));
 
 // Guess MIME (fallback)
 $mime = 'application/octet-stream';
