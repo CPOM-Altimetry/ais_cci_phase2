@@ -13,6 +13,21 @@ return [
   'ip_salt'  => '01a370b9c390885d855420c9140833cbe4d66b8e4b2c34b78b4f922a61425d99',
 
   'products' => [
+    
+    'mm_latest_fv2' => [
+      'file'  => 'multi_mission/ESACCI-AIS-L3C-SEC-MULTIMISSION-5KM-5YEAR-MEANS-202008-202508-fv2.nc',
+      'label' => 'Multi-Mission SEC, latest 5-years',
+      'mission' => 'All RA',
+      'grid_size' => '5km',
+      'instrument' => 'RA',
+    ],
+    'mm_fv2' => [
+      'file'  => 'multi_mission/ESACCI-AIS-L3C-SEC-MULTMISSION-5KM-5YEAR-MEANS-199107-202508-fv2.zip',
+      'label' => 'Multi-Mission 5-year SEC, whole archive',
+      'mission' => 'All RA',
+      'grid_size' => '5km',
+      'instrument' => 'RA',
+    ],
     's3b_fv2' => [
       'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-S3B-5KM-20181220-20250914-fv2.nc',
       'label' => 'Surface Elevation Change',

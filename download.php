@@ -13,36 +13,9 @@ function format_bytes($bytes){
     while ($bytes >= 1024 && $i < count($units)-1){ $bytes /= 1024; $i++; }
     return sprintf(($i===0?'%d %s':'%.2f %s'), $bytes, $units[$i]);
 }
-
-// Build rows with computed metadata for RA (Radar Altimetry)
-$rows = [];
-foreach ($products as $id => $meta) {
-    if ($meta['instrument'] != 'RA') continue;
-    $rel   = $meta['file']  ?? '';
-    $label = $meta['label'] ?? basename($rel);
-    $abs   = $baseDir . '/' . $rel;
-    $mission = $meta['mission'] ?? '';
-    $grid_size = $meta['grid_size'] ?? '';
-    $exists = is_file($abs) && is_readable($abs);
-    $sizeText = $exists ? format_bytes(filesize($abs)) : '—';
-    $mtime    = $exists ? date('Y-m-d', filemtime($abs)) : '—';
-
-    $rows[] = [
-        'file'   => $rel,
-        'id'     => $id,
-        'label'  => $label,
-        'exists' => $exists,
-        'size'   => $sizeText,
-        'mtime'  => $mtime,
-        'mission' => $mission,
-        'grid_size' => $grid_size,
-    ];
-}
-
-// Optional: sort alphabetically by label
-usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
-
 ?>
+
+
 <style>
   /* NEW: Two-column layout for the metadata sections */
   .citation {
@@ -138,8 +111,40 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 
 <p>All netcdf products contain parameters on a 5km south polar stereographic (EPSG:3031) grid.</p>
 
+<?php
+//===================================================================================
+// Build rows for Multi-Mission RA
+//===================================================================================
+$rows = [];
+foreach ($products as $id => $meta) {
+    if ($meta['mission'] != 'All RA') continue;
+    $rel   = $meta['file']  ?? '';
+    $label = $meta['label'] ?? basename($rel);
+    $abs   = $baseDir . '/' . $rel;
+    $mission = $meta['mission'] ?? '';
+    $grid_size = $meta['grid_size'] ?? '';
+    $exists = is_file($abs) && is_readable($abs);
+    $sizeText = $exists ? format_bytes(filesize($abs)) : '—';
+    $mtime    = $exists ? date('Y-m-d', filemtime($abs)) : '—';
+
+    $rows[] = [
+        'file'   => $rel,
+        'id'     => $id,
+        'label'  => $label,
+        'exists' => $exists,
+        'size'   => $sizeText,
+        'mtime'  => $mtime,
+        'mission' => $mission,
+        'grid_size' => $grid_size,
+    ];
+}
+// Optional: sort alphabetically by label
+//usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
+?>
+
 <h3>Multi-Mission 5-year SEC Downloads</h3>
-<p>Each file contains a 5-year period. Files are stepped by 1 month.</p>
+<p>Each file contains a 5-year period. The first file shown is the latest 5-year period. The second file
+  is a zip of all 5-year period netcdf files since 1991, stepped by 1 month.</p>
 <table class="downloads">
   <thead>
     <tr>
@@ -151,8 +156,58 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
     </tr>
   </thead>
   <tbody>
-</tbody>
+    <?php foreach ($rows as $r): ?>
+      <tr>
+         <td><?php echo h($r['mission']); ?></td>
+        <td><?php echo h($r['size']); ?></td>
+        <td><?php echo h(basename($r['file'])); ?></td>
+        <td class="muted"><?php echo h($r['mtime']); ?></td>
+        <td>
+          <?php if ($r['exists']): ?>
+            <a class="download-btn" href="fetch.php?id=<?php echo urlencode($r['id']); ?>">
+              <span class="material-icons" aria-hidden="true">download</span>
+            </a>
+          <?php else: ?>
+            <span class="unavail">Unavailable</span>
+          <?php endif; ?>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
 </table>
+
+<?php
+//===================================================================================
+// Build rows for Single Mission RA
+//===================================================================================
+$rows = [];
+foreach ($products as $id => $meta) {
+    if ($meta['instrument'] != 'RA') continue;
+    if ($meta['mission'] == 'All RA') continue;
+    $rel   = $meta['file']  ?? '';
+    $label = $meta['label'] ?? basename($rel);
+    $abs   = $baseDir . '/' . $rel;
+    $mission = $meta['mission'] ?? '';
+    $grid_size = $meta['grid_size'] ?? '';
+    $exists = is_file($abs) && is_readable($abs);
+    $sizeText = $exists ? format_bytes(filesize($abs)) : '—';
+    $mtime    = $exists ? date('Y-m-d', filemtime($abs)) : '—';
+
+    $rows[] = [
+        'file'   => $rel,
+        'id'     => $id,
+        'label'  => $label,
+        'exists' => $exists,
+        'size'   => $sizeText,
+        'mtime'  => $mtime,
+        'mission' => $mission,
+        'grid_size' => $grid_size,
+    ];
+}
+
+// Optional: sort alphabetically by label
+usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
+?>
 
 <h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
 <table class="downloads">
