@@ -1,158 +1,260 @@
 <?php
-// fetch.php — PHP 7.4 compatible download endpoint with optional SQLite logging
-// Works with your existing config/downloads.php structure
+/**
+ * fetch.php — Secure file streamer with CSV/SQLite logging + GeoIP (PHP 7.4)
+ *
+ * GET params:
+ *   id       = product key from config/downloads.php
+ *   len=1    = (optional) send Content-Length header
+ *   debug=1  = quick health info (no download)
+ *   debug=2  = extended debug (paths, client_ip, geoip class, etc.)
+ */
 
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
-@ini_set('display_errors', '0');
+if (!defined('AIS_CCI_APP')) define('AIS_CCI_APP', true);
 
-// --------- Load config ----------
-$cfg      = require __DIR__ . '/config/downloads.php';
-$baseDir  = rtrim((string)($cfg['base_dir'] ?? ''), '/');
-$products = (array)($cfg['products'] ?? []);
-$statsCfg = (array)($cfg['stats'] ?? []);
-$logEnabled = !empty($statsCfg['enable_db']);
-$sqlitePath = (string)($statsCfg['sqlite_path'] ?? '');
+if (function_exists('mb_internal_encoding')) { mb_internal_encoding('UTF-8'); }
 
-// --------- Helpers ----------
-function hfn($s) { // sanitize name for Content-Disposition
-    $s = preg_replace('/[^\w.\-()+\[\] ]+/u', '_', (string)$s);
-    return $s !== '' ? $s : 'download.bin';
-}
-function realp($p) { $r = realpath($p); return $r !== false ? $r : ''; }
-function http_error($code, $msg) {
-    http_response_code($code);
-    header('Content-Type: text/plain; charset=UTF-8');
-    echo $msg;
-    exit;
-}
-function client_ip() {
-    // Keep it simple; don’t trust forwarded headers blindly in generic code
-    return $_SERVER['REMOTE_ADDR'] ?? '';
-}
-function cf_country() {
-    // If behind Cloudflare, this header is present (2-letter ISO)
-    $iso = strtoupper(trim($_SERVER['HTTP_CF_IPCOUNTRY'] ?? ''));
-    return preg_match('/^[A-Z]{2}$/', $iso) ? $iso : '';
-}
+// --------------------------- Config & paths ---------------------------
+$config    = require __DIR__ . '/config/downloads.php';
+$baseDir   = rtrim($config['base_dir'] ?? '', '/');
+$products  = $config['products'] ?? [];
+$ipSalt    = $config['ip_salt'] ?? 'fallback-salt';
+$statsCfg  = $config['stats'] ?? [];
 
-// --------- Validate request ----------
-$id = isset($_GET['id']) ? (string)$_GET['id'] : '';
-if ($id === '' || !isset($products[$id])) {
-    http_error(404, 'Unknown download id.');
-}
+$DATA_DIR = __DIR__ . '/data';
+if (!is_dir($DATA_DIR)) { @mkdir($DATA_DIR, 0775, true); }
+@touch($DATA_DIR . '/php_error.log');
+@touch($DATA_DIR . '/errors.log');
+@ini_set('log_errors', '1');
+@ini_set('error_log', $DATA_DIR . '/php_error.log');
+error_reporting(E_ALL);
 
-$meta = (array)$products[$id];
-$rel  = (string)($meta['file'] ?? '');
-if ($rel === '') {
-    http_error(404, 'Product file not configured.');
+// Avoid output buffering & compression (streaming)
+if (function_exists('apache_setenv')) { @apache_setenv('no-gzip', '1'); }
+@ini_set('zlib.output_compression', '0');
+while (ob_get_level()) { @ob_end_clean(); }
+
+// Toggle Content-Length with ?len=1
+$SEND_LENGTH = (isset($_GET['len']) && $_GET['len'] === '1');
+
+// --------------------------- Helpers ---------------------------
+function log_line($m){
+  @file_put_contents(__DIR__.'/data/errors.log','['.date('c')."] $m\n",FILE_APPEND);
 }
 
-$absRequested = $baseDir . '/' . $rel;
-$abs          = realp($absRequested);
-$baseReal     = realp($baseDir);
-
-// Containment check: downloaded file must live under base_dir
-if ($abs === '' || $baseReal === '' || strpos($abs, $baseReal) !== 0) {
-    http_error(404, 'File not accessible.');
-}
-if (!is_file($abs) || !is_readable($abs)) {
-    http_error(404, 'File unavailable.');
+function bail($code,$msg,$extra=[]){
+  http_response_code($code);
+  header('Content-Type: text/plain; charset=UTF-8');
+  echo $msg;
+  if ($extra) log_line($msg.' :: '.var_export($extra,true));
+  exit;
 }
 
-// Nice filename in header
-$downloadName = hfn(basename($rel));
+/** Return client IP; if REMOTE_ADDR is a trusted proxy, honour first XFF entry */
+function client_ip(array $trusted): string {
+  $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+  if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']) && in_array($ip, $trusted, true)) {
+    $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+    $cand  = trim($parts[0] ?? '');
+    if (filter_var($cand, FILTER_VALIDATE_IP)) return $cand;
+  }
+  return $ip;
+}
 
-// Guess MIME (fallback)
-$mime = 'application/octet-stream';
-if (function_exists('finfo_open')) {
-    $fi = finfo_open(FILEINFO_MIME_TYPE);
-    if ($fi) {
-        $m = finfo_file($fi, $abs);
-        if (is_string($m) && $m !== '') $mime = $m;
-        finfo_close($fi);
+// --------------------------- Resolve product ---------------------------
+$id = $_GET['id'] ?? '';
+if (!isset($products[$id])) bail(404,'Unknown product',['id'=>$id]);
+
+$rel   = $products[$id]['file']  ?? '';
+$label = $products[$id]['label'] ?? basename($rel);
+$req   = $baseDir . '/' . $rel;
+
+$realBase = realpath($baseDir);
+$realFile = realpath($req);
+
+if ($realFile === false || !is_file($realFile) || !is_readable($realFile)) {
+  bail(404,'File not found',['req'=>$req,'real'=>$realFile]);
+}
+if ($realBase === false || strpos($realFile, $realBase) !== 0) {
+  bail(403,'Access denied (outside base_dir)',['base'=>$realBase,'file'=>$realFile]);
+}
+
+// --------------------------- Meta ---------------------------
+clearstatcache(true,$realFile);
+$bytes = filesize($realFile);
+$ua    = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 400);
+$ref   = substr($_SERVER['HTTP_REFERER'] ?? '', 0, 400);
+
+$trusted = $statsCfg['trusted_proxies'] ?? [];
+$ip      = client_ip($trusted);
+
+// --------------------------- Debug (no download) ---------------------------
+if (isset($_GET['debug'])) {
+  header('Content-Type: text/plain; charset=UTF-8');
+  echo "ok: yes\n";
+  echo "id: $id\n";
+  echo "file_exists: " . (is_file($realFile) ? "true" : "false") . "\n";
+  echo "file_readable: " . (is_readable($realFile) ? "true" : "false") . "\n";
+  echo "bytes: $bytes\n";
+  echo "send_length: " . ($SEND_LENGTH ? "true" : "false") . "\n";
+  if ($_GET['debug'] === '2') {
+    echo "realBase: $realBase\n";
+    echo "realFile: $realFile\n";
+    echo "client_ip: $ip\n";
+    echo "sqlite_enabled: " . (!empty($statsCfg['enable_db']) ? 'true' : 'false') . "\n";
+    echo "sqlite_path: " . ($statsCfg['sqlite_path'] ?? '(none)') . "\n";
+    echo "geoip_enabled: " . (!empty($statsCfg['enable_geoip']) ? 'true' : 'false') . "\n";
+    echo "geoip_mmdb: " . ($statsCfg['geoip_mmdb'] ?? '(none)') . "\n";
+    // Which GeoIP class would be used?
+    $geoipClass = 'none';
+    if (file_exists(__DIR__.'/vendor/autoload.php')) require_once __DIR__.'/vendor/autoload.php';
+    elseif (file_exists(__DIR__.'/../vendor/autoload.php')) require_once __DIR__.'/../vendor/autoload.php';
+    if (class_exists(\GeoIp2\Database\Reader::class))      $geoipClass = 'GeoIp2\Database\Reader';
+    elseif (class_exists(\MaxMind\Db\Reader::class))       $geoipClass = 'MaxMind\Db\Reader';
+    echo "geoip_class: $geoipClass\n";
+  }
+  exit;
+}
+
+// --------------------------- Privacy-safe IP hash ---------------------------
+if (function_exists('hash_hmac'))      $ipHash = hash_hmac('sha256', $ip, $ipSalt);
+elseif (function_exists('sha1'))       $ipHash = sha1($ipSalt.'|'.$ip);
+else                                   $ipHash = $ip;
+
+// --------------------------- GeoIP (optional, non-blocking) ---------------------------
+$countryIso  = null;
+$countryName = null;
+
+if (!empty($statsCfg['enable_geoip']) && !empty($statsCfg['geoip_mmdb'])) {
+  try {
+    // Composer autoload (either local vendor/ or parent)
+    if (file_exists(__DIR__.'/vendor/autoload.php')) {
+      require_once __DIR__.'/vendor/autoload.php';
+    } elseif (file_exists(__DIR__.'/../vendor/autoload.php')) {
+      require_once __DIR__.'/../vendor/autoload.php';
     }
-}
 
-// --------- Stats logging (optional) ----------
-if ($logEnabled && $sqlitePath !== '') {
-    try {
-        if (is_file($sqlitePath) || is_dir(dirname($sqlitePath))) {
-            $pdo = new PDO('sqlite:' . $sqlitePath, null, null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
+    $mmdb = $statsCfg['geoip_mmdb'];
+    if (class_exists(\GeoIp2\Database\Reader::class) && is_readable($mmdb)) {
+      // Preferred: GeoIP2 v2.x (you installed this)
+      $reader = new \GeoIp2\Database\Reader($mmdb);
+      $rec    = $reader->country($ip);
+      $reader->close();
+      $countryIso  = $rec->country->isoCode ?? null;
+      $countryName = $rec->country->name    ?? null;
 
-            // Create table if missing — matches what stats.php expects
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS downloads (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  ts TEXT NOT NULL,
-                  product_id TEXT,
-                  file_name TEXT,
-                  bytes INTEGER,
-                  ip TEXT,
-                  country_iso TEXT,
-                  country_name TEXT,
-                  referer TEXT
-                );
-            ");
-
-            $stmt = $pdo->prepare("
-                INSERT INTO downloads (ts, product_id, file_name, bytes, ip, country_iso, country_name, referer)
-                VALUES (:ts, :pid, :file, :bytes, :ip, :iso, :name, :ref)
-            ");
-
-            $iso = cf_country();            // e.g., "US" if behind Cloudflare; else ''
-            $name = null;                   // optional: leave NULL; stats.php COALESCEs to 'Unknown'
-            $ref = isset($_SERVER['HTTP_REFERER']) ? (string)$_SERVER['HTTP_REFERER'] : null;
-
-            $stmt->execute([
-                ':ts'    => gmdate('Y-m-d H:i:s'),      // UTC
-                ':pid'   => $id,
-                ':file'  => basename($rel),
-                ':bytes' => (int)@filesize($abs),
-                ':ip'    => client_ip(),
-                ':iso'   => $iso ?: null,
-                ':name'  => $name,
-                ':ref'   => $ref,
-            ]);
-        }
-    } catch (Throwable $e) {
-        // Fail silently: downloads must still work
-        // If you want to debug, write to a log file here.
-        // @error_log('fetch.php log error: ' . $e->getMessage());
+    } elseif (class_exists(\MaxMind\Db\Reader::class) && is_readable($mmdb)) {
+      // Fallback: low-level reader (in case you ever swap packages)
+      $reader = new \MaxMind\Db\Reader($mmdb);
+      $arr    = $reader->get($ip);
+      $reader->close();
+      if (is_array($arr)) {
+        $countryIso  = $arr['country']['iso_code']
+                    ?? ($arr['registered_country']['iso_code'] ?? null);
+        $countryName = $arr['country']['names']['en']
+                    ?? ($arr['registered_country']['names']['en'] ?? null);
+      }
     }
+  } catch (\Throwable $e) {
+    log_line('geoip fail: '.$e->getMessage());
+  } catch (\Exception $e) { // PHP 7.x safety
+    log_line('geoip fail: '.$e->getMessage());
+  }
 }
 
-// --------- Send file ----------
-if (function_exists('apache_setenv')) {
-    @apache_setenv('no-gzip', '1');
+// --------------------------- CSV logging (non-blocking) ---------------------------
+try {
+  $csv = $DATA_DIR . '/downloads.csv';
+  $fh  = @fopen($csv, 'ab');
+  if ($fh) {
+    if (flock($fh, LOCK_EX)) {
+      fputcsv($fh, [
+        date('c'),
+        $id,
+        basename($realFile),
+        $bytes,
+        $ipHash,
+        $ua,
+        $ref,
+        $countryIso,
+        $countryName
+      ]);
+      flock($fh, LOCK_UN);
+    }
+    fclose($fh);
+  } else {
+    log_line("csv open fail: $csv");
+  }
+} catch (\Throwable $e) {
+  log_line("csv log fail: ".$e->getMessage());
+} catch (\Exception $e) {
+  log_line("csv log fail: ".$e->getMessage());
 }
-@ini_set('zlib.output_compression', 'Off');
-// Remove any accidental output buffers to avoid corrupting the file
-while (ob_get_level() > 0) { @ob_end_clean(); }
 
-$size = @filesize($abs);
+// --------------------------- SQLite logging (optional) ---------------------------
+if (!empty($statsCfg['enable_db']) && !empty($statsCfg['sqlite_path'])) {
+  try {
+    $pdo = new PDO('sqlite:' . $statsCfg['sqlite_path']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    // Create table if needed (cheap if it already exists)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS downloads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ts TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      bytes INTEGER NOT NULL,
+      ip_hash TEXT NOT NULL,
+      user_agent TEXT,
+      referer TEXT,
+      country_iso TEXT,
+      country_name TEXT
+    )");
+
+    $stmt = $pdo->prepare("INSERT INTO downloads
+      (ts, product_id, file_name, bytes, ip_hash, user_agent, referer, country_iso, country_name)
+      VALUES (:ts,:pid,:fn,:b,:ip,:ua,:ref,:iso,:name)");
+
+    $stmt->execute([
+      ':ts'   => date('c'),
+      ':pid'  => $id,
+      ':fn'   => basename($realFile),
+      ':b'    => $bytes,
+      ':ip'   => $ipHash,
+      ':ua'   => $ua,
+      ':ref'  => $ref,
+      ':iso'  => $countryIso,
+      ':name' => $countryName,
+    ]);
+
+  } catch (\Throwable $e) {
+    log_line('sqlite log fail: '.$e->getMessage());
+  } catch (\Exception $e) {
+    log_line('sqlite log fail: '.$e->getMessage());
+  }
+}
+
+// --------------------------- Headers ---------------------------
+$mime = 'application/x-netcdf';
 header('Content-Type: ' . $mime);
-if ($size !== false) header('Content-Length: ' . (string)$size);
-header('Content-Disposition: attachment; filename="' . $downloadName . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
-
+header('Content-Disposition: attachment; filename="' . basename($realFile) . '"');
+if ($SEND_LENGTH) header('Content-Length: ' . $bytes);
 header('X-Content-Type-Options: nosniff');
-header('Cache-Control: private, max-age=3600, must-revalidate');
+header('Cache-Control: private, max-age=0, must-revalidate');
 header('Accept-Ranges: none');
 
-// If you have X-Sendfile enabled in your web server, you can use it instead:
-// header('X-Sendfile: ' . $abs);
-// exit;
+// --------------------------- Stream ---------------------------
+$fp = @fopen($realFile, 'rb');
+if (!$fp) bail(500,'Unable to open file for reading',['file'=>$realFile]);
 
-$fp = fopen($abs, 'rb');
-if (!$fp) http_error(404, 'Could not open file.');
-$chunk = 1048576; // 1MB
+ignore_user_abort(true);
+set_time_limit(0);
+
+$chunk = 8192;
 while (!feof($fp)) {
-    $buf = fread($fp, $chunk);
-    if ($buf === false) break;
-    echo $buf;
-    @flush();
+  $buf = fread($fp, $chunk);
+  if ($buf === false) break;
+  echo $buf;
+  @flush();
 }
 fclose($fp);
 exit;
