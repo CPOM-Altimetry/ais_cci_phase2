@@ -38,43 +38,24 @@ if ($prodParam && !isset($products[$prodParam])) $prodParam = '';
 // Helpers
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function pdo_or_error($path){
-    // Prefer read-only open so stats never take a write lock.
-    // DSN with query params requires SQLite >= 3.7 (common on modern distros).
-    $dsnRo = 'sqlite:' . $path . '?mode=ro';
-
     try {
-        // Try strict read-only first
-        $pdo = new PDO($dsnRo, null, null, [
+        $pdo = new PDO('sqlite:' . $path, null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
-    } catch (Throwable $e) {
-        // Fallback: older SQLite builds may not accept ?mode=ro in DSN
-        try {
-            $pdo = new PDO('sqlite:' . $path, null, null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            ]);
-        } catch (Throwable $e2) {
-            return $e2->getMessage(); // bubble the error up to your existing UI
-        }
-    }
 
-    try {
         // Avoid long hangs on concurrent writes from fetch.php
-        // (both forms below are okay; use both for widest compatibility)
         if (defined('PDO::SQLITE_ATTR_BUSY_TIMEOUT')) {
-            // 2000 ms
-            $pdo->setAttribute(PDO::SQLITE_ATTR_BUSY_TIMEOUT, 2000);
+            $pdo->setAttribute(PDO::SQLITE_ATTR_BUSY_TIMEOUT, 2000); // 2s
         }
-        $pdo->exec('PRAGMA busy_timeout=2000');   -- wait up to 2s for a lock
-        $pdo->exec('PRAGMA query_only=ON');       -- guarantee no writes from this process
-        // Optional but harmless for read-only: page cache can help on some hosts
-        // $pdo->exec('PRAGMA temp_store=MEMORY');
-    } catch (Throwable $e) {
-        // Non-fatal; continue even if PRAGMAs aren’t supported
-    }
+        $pdo->exec('PRAGMA busy_timeout=2000'); // 2s
+        $pdo->exec('PRAGMA query_only=ON');     // read-only from this process
 
-    return $pdo;
+        return $pdo;
+    } catch (Throwable $e) {
+        return $e->getMessage();
+    }
 }
+
 
 function table_exists(PDO $pdo, $name){
     $stmt = $pdo->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
