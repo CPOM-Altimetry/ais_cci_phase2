@@ -239,17 +239,27 @@ html,body{
             max-width:100px; width:100%; height:auto;
         }
 
+/* Remove flex from the main div */
 #grid_details {
-  background:#d9d9d9; padding:4px 4px; border-radius:6px;
-  font-weight:600; text-align:left;
-  display: flex;
-  align-items: center; /* This line does the vertical centering */
+  background:#d9d9d9; 
+  padding:4px 4px; 
+  border-radius:6px;
+  font-weight:400; 
+  text-align:left;
+  /* display: flex; <--- REMOVE */
+  /* align-items: center; <--- REMOVE */
 } 
+
+/* Add flex to the <p> tag */
+#grid_details p {
+  display: flex;
+  align-items: center; /* Vertically centers the icon with the text block */
+  gap: 8px;          /* Adds a nice space between them */
+}
+
+/* This is a small helper to ensure the icon never gets squished */
 #grid_details svg {
-  vertical-align: middle;
-  
-  /* Optional: Add some space between the icon and text */
-  margin-right: 8px; 
+  flex-shrink: 0;
 }
 
 @media (max-width:600px){ .float-right-img{ float:none; margin:10px 0; } }
