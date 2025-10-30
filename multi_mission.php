@@ -1,5 +1,5 @@
 <?php
-// multi_mission.php — custom-controls video player with in-row hillshade toggle
+// multi_mission.php — custom-controls video player (two-row controls, in-row hillshade toggle)
 
 // ---- Hillshade default from php_init.php ('show' | 'hide')
 $use_hs = (isset($hillshade) ? $hillshade === 'show' : true);
@@ -37,16 +37,8 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
 
 $PLAYER_ID = 'mmv-player';
 ?>
-<h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
-<img id="multi_mission_logo" src="images/multi_mission_logo.webp" alt="Single mission logo" class="float-right-img">
-
-<p>Each netCDF4 product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
-The periods are stepped by one month between product files. Each period of SEC is calculated from 
-multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetry between 1991 and 2025.
-</p>
-
-<p>Each frame of the visualization below contains a plot of a single product's 5-year SEC.
-    Use the controls to view the full time range of surface elevation change.</p>
+<h3>Multi-mission SEC (1991–2025) — time series</h3>
+<p>This video shows the Antarctic ice sheet surface elevation change time series. Use the controls to play, scrub, and change speed.</p>
 
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
@@ -54,37 +46,65 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   .mmv-media{ background:#000; }
   .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:780/780; background:#000; }
 
-  .mmv-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
-  .mmv-left,.mmv-right{ display:flex; align-items:center; gap:10px }
-  .mmv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
+  /* Two-row controls layout */
+  .mmv-controls{
+    display:flex; flex-direction:column;
+    gap:8px; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0;
+  }
+  .mmv-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .mmv-row-top{ justify-content:flex-start; }
+  .mmv-row-bottom{ justify-content:space-between; }
 
-  .mmv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
+  .mmv-left,.mmv-center,.mmv-right{ display:flex; align-items:center; gap:10px; }
+  .mmv-center{ flex:1 1 auto; }
+
+  .mmv-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px;
+    background:#fff; cursor:pointer; transition:background .15s,border-color .15s;
+  }
   .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
   .mmv-btn .material-icons{ font-size:20px; line-height:1 }
 
   .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
   .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
+  /* Scrub */
   .mmv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
   .mmv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer }
   .mmv-range:focus{ outline:none }
-  .mmv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--mmv-rail-fill) var(--mmv-fill,0%),var(--mmv-rail) var(--mmv-fill,0%)); }
+  .mmv-range::-webkit-slider-runnable-track{
+    height:6px; border-radius:999px;
+    background:linear-gradient(to right,var(--mmv-rail-fill) var(--mmv-fill,0%),var(--mmv-rail) var(--mmv-fill,0%));
+  }
   .mmv-range::-webkit-slider-thumb{ appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0 }
   .mmv-range::-moz-range-track{ height:6px; background:var(--mmv-rail); border-radius:999px }
   .mmv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
 
+  /* Custom 5-year window “thumb” (JS positions this with transforms) */
   .mmv-window{
     position:absolute; top:50%; transform:translateY(-50%);
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
     pointer-events:none; width:64px;
   }
 
-  /* Compact, in-row hillshade toggle: reuse your global toggle CSS, but lay it out inline here */
-  .mmv-controls .mmv-compact-toggle{ display:flex; align-items:center; gap:8px; margin-left:8px; }
-  .mmv-controls .mmv-compact-toggle .toggle-label{ margin:0; font-weight:600; }
-  .mmv-controls .mmv-compact-toggle .toggle-switch{ display:flex; align-items:center; gap:6px; }
-  .mmv-controls .mmv-compact-toggle .toggle-option{ font-size:13px; }
-  .mmv-controls .mmv-compact-toggle .switch{ transform:scale(.9); transform-origin:center; }
+  /* View dropdown */
+  .mmv-view{ display:flex; align-items:center; gap:6px; }
+  .mmv-view label{
+    font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif;
+    color:#333; white-space:nowrap;
+  }
+  .mmv-view-select{
+    height:36px; padding:0 8px; background:#fff;
+    border:1px solid #d9dee5; border-radius:8px;
+  }
+
+  /* Compact, in-row hillshade toggle: reuses global switch styles, scaled down */
+  .mmv-compact-toggle{ display:flex; align-items:center; gap:8px }
+  .mmv-compact-toggle .toggle-switch{ display:flex; align-items:center; gap:6px }
+  .mmv-compact-toggle .switch{ transform:scale(.9); transform-origin:center }
+  .mmv-compact-toggle .toggle-option{ font-size:13px; }
+
   @media (max-width:720px){ .mmv-bound{ font-size:12px } }
 </style>
 
@@ -97,35 +117,21 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   data-end-label="<?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?>"
 >
   <div class="mmv-controls" role="group" aria-label="Video controls">
-    <div class="mmv-left">
-      <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
-        <span class="material-icons">play_arrow</span>
-      </button>
-    </div>
 
-    <div class="mmv-center">
-      <span class="mmv-bound mmv-start" data-role="label-start"><?php echo htmlspecialchars($startLabel, ENT_QUOTES); ?></span>
-      <div class="mmv-scrub-wrap">
-        <div class="mmv-window" aria-hidden="true"></div>
-        <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+    <!-- Row 1: View dropdown : Hillshade toggle : Speed selector -->
+    <div class="mmv-row mmv-row-top">
+      <!-- View selector (not wired yet) -->
+      <div class="mmv-view">
+        <label for="mmv-view-select">View:</label>
+        <select id="mmv-view-select" class="mmv-view-select" aria-label="Select view">
+          <option value="ais" selected>Antarctica Ice Sheet</option>
+          <option value="ase">ASE: PIG, Thwaites Glaciers</option>
+        </select>
       </div>
-      <span class="mmv-bound mmv-end" data-role="label-end"><?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?></span>
-    </div>
 
-    <div class="mmv-right">
-      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
-        <option value="0.5">0.5×</option>
-        <option value="0.75">0.75×</option>
-        <option value="1" selected>1×</option>
-        <option value="1.25">1.25×</option>
-        <option value="1.5">1.5×</option>
-        <option value="2">2×</option>
-      </select>
-
-      <!-- === Hill Shade toggle (inline, same IDs as other tabs) === -->
+      <!-- Hill Shade toggle (inline, same IDs your site JS uses) -->
       <div class="mmv-compact-toggle">
         <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
-
           <form id="hillshade-form" method="POST" style="display:none;">
             <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
             <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
@@ -138,7 +144,34 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
           <span class="toggle-option tog_to_hide">Hillshade</span>
         </div>
       </div>
-      <!-- === /Hill Shade toggle === -->
+
+      <!-- Speed selector -->
+      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
+        <option value="0.5">0.5×</option>
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+    </div>
+
+    <!-- Row 2: Play button : Scrubber -->
+    <div class="mmv-row mmv-row-bottom">
+      <div class="mmv-left">
+        <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
+          <span class="material-icons">play_arrow</span>
+        </button>
+      </div>
+
+      <div class="mmv-center">
+        <span class="mmv-bound mmv-start" data-role="label-start"><?php echo htmlspecialchars($startLabel, ENT_QUOTES); ?></span>
+        <div class="mmv-scrub-wrap">
+          <div class="mmv-window" aria-hidden="true"></div>
+          <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+        </div>
+        <span class="mmv-bound mmv-end" data-role="label-end"><?php echo htmlspecialchars($endLabel, ENT_QUOTES); ?></span>
+      </div>
     </div>
   </div>
 
@@ -147,14 +180,6 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
       preload="metadata"
       playsinline
       poster="<?php echo htmlspecialchars($poster, ENT_QUOTES); ?>"
-      data-poster-no="<?php echo htmlspecialchars($poster_no, ENT_QUOTES); ?>"
-      data-poster-hs="<?php echo htmlspecialchars($poster_hs, ENT_QUOTES); ?>"
-      data-src-av1-no="<?php echo htmlspecialchars($src_av1_no, ENT_QUOTES); ?>"
-      data-src-vp9-no="<?php echo htmlspecialchars($src_vp9_no, ENT_QUOTES); ?>"
-      data-src-h264-no="<?php echo htmlspecialchars($src_h264_no, ENT_QUOTES); ?>"
-      data-src-av1-hs="<?php echo htmlspecialchars($src_av1_hs, ENT_QUOTES); ?>"
-      data-src-vp9-hs="<?php echo htmlspecialchars($src_vp9_hs, ENT_QUOTES); ?>"
-      data-src-h264-hs="<?php echo htmlspecialchars($src_h264_hs, ENT_QUOTES); ?>"
     >
       <source src="<?php echo htmlspecialchars($src_av1,  ENT_QUOTES); ?>" type="video/webm; codecs=av01.0.05M.08">
       <source src="<?php echo htmlspecialchars($src_vp9,  ENT_QUOTES); ?>" type="video/webm; codecs=vp9">
