@@ -132,7 +132,7 @@ $PLAYER_ID = 'mmv-player';
         <label for="mmv-view-select">View:</label>
         <select id="mmv-view-select" class="mmv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
           <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
-          <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers<img src="images/zoom_ase.webp"></option>
+          <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
         <input type="hidden" name="active_tab" value="multi_mission">
         <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
