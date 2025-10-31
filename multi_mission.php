@@ -44,9 +44,16 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
 
 $PLAYER_ID = 'mmv-player';
 ?>
-<h3>Multi-mission SEC (1991–2025) — time series</h3>
-<p>This video shows the Antarctic ice sheet surface elevation change time series. Use the controls to play, scrub, and change speed.</p>
+<h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
+<img id="multi_mission_logo" src="images/multi_mission_logo.webp" alt="Single mission logo" class="float-right-img">
 
+<p>Each netCDF4 product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
+The periods are stepped by one month between product files. Each period of SEC is calculated from 
+multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetry between 1991 and 2025.
+</p>
+
+<p>Each frame of the visualization below contains a plot of a single product's 5-year SEC.
+    Use the controls to view the full time range of surface elevation change.</p>
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
   .mmv-wrap{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
