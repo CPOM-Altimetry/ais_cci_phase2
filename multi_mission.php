@@ -1,22 +1,29 @@
 <?php
-// multi_mission.php — custom-controls video player (two-row controls, in-row hillshade toggle)
+// multi_mission.php — custom-controls video player (two-row controls, in-row hillshade toggle + view switch)
 
 // ---- Hillshade default from php_init.php ('show' | 'hide')
 $use_hs = (isset($hillshade) ? $hillshade === 'show' : true);
 
-// ---- Non-HS assets
-$poster_no   = 'multi_mission_quicklooks/last_frame.webp';
-$src_av1_no  = 'multi_mission_quicklooks/multi_mission_av1.webm';
-$src_vp9_no  = 'multi_mission_quicklooks/multi_mission_vp9.webm';
-$src_h264_no = 'multi_mission_quicklooks/multi_mission_h264.mp4';
+// ---- View selection: 'ais' (default) or 'ase'
+$mm_view = isset($_POST['mm_view']) ? (($_POST['mm_view']==='ase') ? 'ase' : 'ais')
+         : (isset($_GET['mm_view'])  ? (($_GET['mm_view']==='ase')  ? 'ase' : 'ais') : 'ais');
 
-// ---- HS assets
-$poster_hs   = 'multi_mission_quicklooks/last_frame_hs.webp';
-$src_av1_hs  = 'multi_mission_quicklooks/multi_mission_av1_hs.webm';
-$src_vp9_hs  = 'multi_mission_quicklooks/multi_mission_vp9_hs.webm';
-$src_h264_hs = 'multi_mission_quicklooks/multi_mission_h264_hs.mp4';
+// ---- Pick asset suffix based on view
+$suffix = ($mm_view === 'ase') ? '.sec-ase' : '.sec';
 
-// ---- Choose initial set based on $use_hs
+// ---- Non-HS assets (per view)
+$poster_no   = 'multi_mission_quicklooks/last_frame'                  . $suffix . '.webp';
+$src_av1_no  = 'multi_mission_quicklooks/multi_mission_av1'          . $suffix . '.webm';
+$src_vp9_no  = 'multi_mission_quicklooks/multi_mission_vp9'          . $suffix . '.webm';
+$src_h264_no = 'multi_mission_quicklooks/multi_mission_h264'         . $suffix . '.mp4';
+
+// ---- HS assets (per view)
+$poster_hs   = 'multi_mission_quicklooks/last_frame_hs'              . $suffix . '.webp';
+$src_av1_hs  = 'multi_mission_quicklooks/multi_mission_av1_hs'      . $suffix . '.webm';
+$src_vp9_hs  = 'multi_mission_quicklooks/multi_mission_vp9_hs'      . $suffix . '.webm';
+$src_h264_hs = 'multi_mission_quicklooks/multi_mission_h264_hs'     . $suffix . '.mp4';
+
+// ---- Choose initial set based on hillshade
 $poster   = $use_hs ? $poster_hs   : $poster_no;
 $src_av1  = $use_hs ? $src_av1_hs  : $src_av1_no;
 $src_vp9  = $use_hs ? $src_vp9_hs  : $src_vp9_no;
@@ -120,21 +127,24 @@ $PLAYER_ID = 'mmv-player';
 
     <!-- Row 1: View dropdown : Hillshade toggle : Speed selector -->
     <div class="mmv-row mmv-row-top">
-      <!-- View selector (not wired yet) -->
-      <div class="mmv-view">
+      <!-- View selector (wired via form submit; preserves hillshade + tab) -->
+      <form class="mmv-view" id="mmv-view-form" method="POST" action="">
         <label for="mmv-view-select">View:</label>
-        <select id="mmv-view-select" class="mmv-view-select" aria-label="Select view">
-          <option value="ais" selected>Antarctica Ice Sheet</option>
-          <option value="ase">ASE: PIG, Thwaites Glaciers</option>
+        <select id="mmv-view-select" class="mmv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
+          <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
+          <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
-      </div>
+        <input type="hidden" name="active_tab" value="multi_mission">
+        <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+      </form>
 
-      <!-- Hill Shade toggle (inline, same IDs your site JS uses) -->
+      <!-- Hill Shade toggle (inline, preserves view + tab) -->
       <div class="mmv-compact-toggle">
         <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
           <form id="hillshade-form" method="POST" style="display:none;">
             <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
             <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
+            <input type="hidden" name="mm_view" value="<?php echo htmlspecialchars($mm_view, ENT_QUOTES); ?>">
           </form>
 
           <label class="switch">
@@ -188,6 +198,7 @@ $PLAYER_ID = 'mmv-player';
     </video>
   </div>
 </div>
+
 
 <script>
 (function () {
