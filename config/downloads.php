@@ -43,7 +43,7 @@ return [
       'instrument' => 'RA',
     ],
     'cs2_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-CS2-5KM-20100927-20241203-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-CS2-5KM-20100927-20250909-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'CryoSat-2',
       'grid_size' => '5km',
@@ -64,7 +64,7 @@ return [
       'instrument' => 'RA',
     ],
     'e1_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER1-5KM-19910730-19960723-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-ER1-5KM-19911209-19960716-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'ERS-1',
       'grid_size' => '5km',
