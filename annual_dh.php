@@ -91,6 +91,7 @@ one year to provide the change of height up until the end of that year.</p>
   .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
   .mmv-btn .material-icons{ font-size:20px; line-height:1 }
 
+  .mmv-speed-wrap{ display:flex; flex-direction:column; gap:4px; font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; }
   .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
   .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
@@ -174,14 +175,17 @@ one year to provide the change of height up until the end of that year.</p>
       </div>
 
       <!-- Speed selector -->
-      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
-        <option value="0.5">0.5×</option>
-        <option value="0.75">0.75×</option>
-        <option value="1" selected>1×speed</option>
-        <option value="1.25">1.25×</option>
-        <option value="1.5">1.5×</option>
-        <option value="2">2×speed</option>
-      </select>
+      <div class="mmv-speed-wrap">
+        <label for="mmv-speed-select">Playback speed</label>
+        <select id="mmv-speed-select" class="mmv-speed" data-role="speed">
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×speed</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×speed</option>
+        </select>
+      </div>
     </div>
 
     <!-- Row 2: Play button : Scrubber -->
