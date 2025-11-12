@@ -1,5 +1,5 @@
 <?php
-// multi_mission.php — custom-controls video player (two-row controls, in-row hillshade toggle + view switch)
+// annual_dh.php — custom-controls video player (two-row controls, in-row hillshade toggle + view switch)
 
 // ---- Hillshade default from php_init.php ('show' | 'hide')
 $use_hs = (isset($hillshade) ? $hillshade === 'show' : true);
@@ -13,15 +13,15 @@ $suffix = ($mm_view === 'ase') ? '.sec-ase' : '.sec';
 
 // ---- Non-HS assets (per view)
 $poster_no   = 'annual_dh_quicklooks/last_frame'                  . $suffix . '.webp';
-$src_av1_no  = 'annual_dh_quicklooks/multi_mission_av1'          . $suffix . '.webm';
-$src_vp9_no  = 'annual_dh_quicklooks/multi_mission_vp9'          . $suffix . '.webm';
-$src_h264_no = 'annual_dh_quicklooks/multi_mission_h264'         . $suffix . '.mp4';
+$src_av1_no  = 'annual_dh_quicklooks/annual_dh_av1'          . $suffix . '.webm';
+$src_vp9_no  = 'annual_dh_quicklooks/annual_dh_vp9'          . $suffix . '.webm';
+$src_h264_no = 'annual_dh_quicklooks/annual_dh_h264'         . $suffix . '.mp4';
 
 // ---- HS assets (per view)
 $poster_hs   = 'annual_dh_quicklooks/last_frame_hs'              . $suffix . '.webp';
-$src_av1_hs  = 'annual_dh_quicklooks/multi_mission_av1_hs'      . $suffix . '.webm';
-$src_vp9_hs  = 'annual_dh_quicklooks/multi_mission_vp9_hs'      . $suffix . '.webm';
-$src_h264_hs = 'annual_dh_quicklooks/multi_mission_h264_hs'     . $suffix . '.mp4';
+$src_av1_hs  = 'annual_dh_quicklooks/annual_dh_av1_hs'      . $suffix . '.webm';
+$src_vp9_hs  = 'annual_dh_quicklooks/annual_dh_vp9_hs'      . $suffix . '.webm';
+$src_h264_hs = 'annual_dh_quicklooks/annual_dh_h264_hs'     . $suffix . '.mp4';
 
 // ---- Choose initial set based on hillshade
 $poster   = $use_hs ? $poster_hs   : $poster_no;
@@ -54,7 +54,7 @@ multi-mission radar altimetry measurements from ERS-1, ERS-2, ENVISAT,
 CryoSat-2, Sentinel-3A, and Sentinel-3B. Products are stepped by 
 one year to provide the change of height up until the end of that year.</p>
 
-<p>Each frame of the visualization below contains a plot of a single product's 5-year SEC.
+<p>Each frame of the visualization below contains a plot the Cumulative Annual dH from a single product.
     Use the controls to view the full time range of surface elevation change.</p>
 <style>
   :root { --mmv-blue:#21578b; --mmv-bg:#0f1a26; --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; --mmv-text:#111; }
@@ -143,7 +143,7 @@ one year to provide the change of height up until the end of that year.</p>
           <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
           <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
-        <input type="hidden" name="active_tab" value="multi_mission">
+        <input type="hidden" name="active_tab" value="annual_dh">
         <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
       </form>
 
@@ -152,7 +152,7 @@ one year to provide the change of height up until the end of that year.</p>
         <div class="toggle-switch<?php echo $use_hs ? ' on' : ''; ?>">
           <form id="hillshade-form" method="POST" style="display:none;">
             <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-            <input type="hidden" name="active_tab" id="active_tab_input" value="multi_mission">
+            <input type="hidden" name="active_tab" id="active_tab_input" value="annual_dh">
             <input type="hidden" name="mm_view" value="<?php echo htmlspecialchars($mm_view, ENT_QUOTES); ?>">
           </form>
 
@@ -384,10 +384,10 @@ one year to provide the change of height up until the end of that year.</p>
 
     /* ---- hillshade POST toggle (same flow as other tabs) ---- */
     if (hsToggle && hsForm && hsInput){
-      if (hsTab) hsTab.value = 'multi_mission';
+      if (hsTab) hsTab.value = 'annual_dh';
       hsToggle.addEventListener('change', function(){
         hsInput.value = this.checked ? 'show' : 'hide';
-        if (hsTab) hsTab.value = 'multi_mission';
+        if (hsTab) hsTab.value = 'annual_dh';
         hsForm.submit();
       });
     }
