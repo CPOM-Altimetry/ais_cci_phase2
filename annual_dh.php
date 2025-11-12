@@ -110,7 +110,7 @@ one year to provide the change of height up until the end of that year.</p>
   .mmv-window{
     position:absolute; top:50%; transform:translateY(-50%);
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
-    pointer-events:none; width:64px;
+    pointer-events:none; width:32px;
   }
 
   /* View dropdown */
