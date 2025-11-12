@@ -9,7 +9,7 @@ $mm_view = isset($_POST['mm_view']) ? (($_POST['mm_view']==='ase') ? 'ase' : 'ai
          : (isset($_GET['mm_view'])  ? (($_GET['mm_view']==='ase')  ? 'ase' : 'ais') : 'ais');
 
 // ---- Pick asset suffix based on view
-$suffix = ($mm_view === 'ase') ? '.sec-ase' : '.sec';
+$suffix = ($mm_view === 'ase') ? '.dh-ase' : '.dh';
 
 // ---- Non-HS assets (per view)
 $poster_no   = 'annual_dh_quicklooks/last_frame'                  . $suffix . '.webp';
