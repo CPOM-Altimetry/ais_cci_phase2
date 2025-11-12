@@ -1,3 +1,4 @@
+<?php
 // multi_mission.php — custom-controls video player (two-row controls, in-row hillshade toggle + view switch)
 
 // ---- Hillshade default from php_init.php ('show' | 'hide')
