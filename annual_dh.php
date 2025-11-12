@@ -180,10 +180,10 @@ one year to provide the change of height up until the end of that year.</p>
         <select id="mmv-speed-select" class="mmv-speed" data-role="speed">
           <option value="0.5">0.5×</option>
           <option value="0.75">0.75×</option>
-          <option value="1" selected>1×speed</option>
+          <option value="1" selected>1×</option>
           <option value="1.25">1.25×</option>
           <option value="1.5">1.5×</option>
-          <option value="2">2×speed</option>
+          <option value="2">2×</option>
         </select>
       </div>
     </div>

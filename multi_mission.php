@@ -163,14 +163,17 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
       </div>
 
       <!-- Speed selector -->
-      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
-        <option value="0.5">0.5×</option>
-        <option value="0.75">0.75×</option>
-        <option value="1" selected>1×</option>
-        <option value="1.25">1.25×</option>
-        <option value="1.5">1.5×</option>
-        <option value="2">2×</option>
-      </select>
+      <div class="mmv-speed-wrap">
+        <label for="mmv-speed-select">Playback speed</label>
+        <select id="mmv-speed-select" class="mmv-speed" data-role="speed">
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
     </div>
 
     <!-- Row 2: Play button : Scrubber -->
