@@ -251,7 +251,7 @@ one year to provide the change of height up until the end of that year.</p>
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
     var totalM   = Math.max(1, monthsBetween(start, end)); // guard
-    var windowM  = 12; // 1 year
+    var windowM  = 24; // 1 year
 
     // sizing
     var railW = 0, windowW = 0, initialEndApplied = false;
