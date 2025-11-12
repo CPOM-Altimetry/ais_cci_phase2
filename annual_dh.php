@@ -177,7 +177,7 @@ one year to provide the change of height up until the end of that year.</p>
       <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
         <option value="0.5">0.5×</option>
         <option value="0.75">0.75×</option>
-        <option value="1" selected>1×</option>
+        <option value="1" selected>1× speed</option>
         <option value="1.25">1.25×</option>
         <option value="1.5">1.5×</option>
         <option value="2">2×</option>
@@ -251,7 +251,7 @@ one year to provide the change of height up until the end of that year.</p>
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
     var totalM   = Math.max(1, monthsBetween(start, end)); // guard
-    var windowM  = 24; // 1 year
+    var windowM  = 24; // 2 year
 
     // sizing
     var railW = 0, windowW = 0, initialEndApplied = false;
