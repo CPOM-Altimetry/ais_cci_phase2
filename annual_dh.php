@@ -85,13 +85,13 @@ one year to provide the change of height up until the end of that year.</p>
 
   .mmv-btn{
     display:inline-flex; align-items:center; justify-content:center;
-    width:18px; height:18px; border:1px solid #d9dee5; border-radius:8px;
+    width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px;
     background:#fff; cursor:pointer; transition:background .15s,border-color .15s;
   }
   .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
   .mmv-btn .material-icons{ font-size:20px; line-height:1 }
 
-  .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:18px; padding:0 8px; }
+  .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
   .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
   /* Scrub */
