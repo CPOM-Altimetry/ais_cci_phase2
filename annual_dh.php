@@ -1,12 +1,12 @@
 <?php
-// annual_dh.php — Annual dH video with parameter selector (no extra JS required)
+// annual_dh.php — Annual dH video with parameter selector + hillshade toggle
 
-// Expect these to be available from php_init.php (as in your other tabs)
-$hillshade = isset($hillshade) ? $hillshade : 'hide'; // 'show' | 'hide'
-$active_tab = isset($active_tab) ? $active_tab : 'annual_dh';
+// Expect these from php_init.php (as in other tabs)
+$hillshade   = isset($hillshade) ? $hillshade : 'hide'; // 'show' | 'hide'
+$active_tab  = isset($active_tab) ? $active_tab : 'annual_dh';
 
-// --- Parameter selector (like single_mission.php, but our own set) ---
-$param = isset($_GET['ql_param']) ? (string)$_GET['ql_param'] : 'dh'; // default
+// Parameter selector (like single_mission.php but our list)
+$param = isset($_GET['ql_param']) ? (string)$_GET['ql_param'] : 'dh';
 $PARAMS = [
   'dh'            => 'dH',
   'uncertainty'   => 'Uncertainty of dH',
@@ -15,53 +15,54 @@ $PARAMS = [
 ];
 if (!isset($PARAMS[$param])) $param = 'dh';
 
-// --- Optional "view": Antarctica (ais, default) or ASE (ase) ---
-// If you don't use a view yet, this will just choose AIS assets by default.
+// Optional view (ais default / ase)
 $annual_view = isset($_GET['annual_view']) ? (string)$_GET['annual_view'] : 'ais';
-$view_suffix = ($annual_view === 'ase') ? '-ase' : ''; // e.g., ".dh-ase.webm"
+$view_suffix = ($annual_view === 'ase') ? '-ase' : '';
 
-// --- Build asset names based on param + view + hillshade ---
-// Directory and base name are fixed per your spec:
+// Construct asset names (per your spec)
 $dir  = 'annual_dh_quicklooks';
 $base = 'annual_dh';
 
-// Poster (ok if missing; the <video> will still play)
 $poster_no = "{$dir}/last_frame.{$param}{$view_suffix}.webp";
 $poster_hs = "{$dir}/last_frame_hs.{$param}{$view_suffix}.webp";
 
-// Non-HS
 $src_av1_no  = "{$dir}/{$base}_av1.{$param}{$view_suffix}.webm";
 $src_vp9_no  = "{$dir}/{$base}_vp9.{$param}{$view_suffix}.webm";
 $src_h264_no = "{$dir}/{$base}_h264.{$param}{$view_suffix}.mp4";
 
-// HS
 $src_av1_hs  = "{$dir}/{$base}_av1_hs.{$param}{$view_suffix}.webm";
 $src_vp9_hs  = "{$dir}/{$base}_vp9_hs.{$param}{$view_suffix}.webm";
 $src_h264_hs = "{$dir}/{$base}_h264_hs.{$param}{$view_suffix}.mp4";
 
-// Choose initial set based on hillshade
+// Initial set based on hillshade
 $use_hs  = ($hillshade === 'show');
 $poster  = $use_hs ? $poster_hs : $poster_no;
 $src_av1 = $use_hs ? $src_av1_hs : $src_av1_no;
 $src_vp9 = $use_hs ? $src_vp9_hs : $src_vp9_no;
 $src_h264= $use_hs ? $src_h264_hs: $src_h264_no;
 
-// Small helper
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 <h3>Annual dH (time series)</h3>
 
 <style>
-  /* Top parameter bar (like your single_mission style, compact) */
+  /* Toolbar (parameter + hillshade) */
   .adh-toolbar{
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
     padding:10px 0; margin-bottom:6px;
   }
+  .adh-group{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   .adh-param-label{ font-weight:600; }
+
   .adh-param .w3-button{ background:#21578b; color:#fff; border-radius:6px; }
   .adh-param .w3-dropdown-content .w3-button{ background:#fff; color:#111; text-align:left; }
 
-  /* Player shell to match your other tabs */
+  /* Inline hillshade toggle uses your global .switch/.slider styles */
+  .adh-hs{ display:flex; align-items:center; gap:8px; }
+  .adh-hs .switch{ transform:scale(.95); transform-origin:left center; }
+  .adh-hs .toggle-text{ font-weight:600; }
+
+  /* Player shell */
   :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
   .mmv-wrap{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
   .mmv-media{ background:#000; }
@@ -86,7 +87,6 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   .mmv-range::-moz-range-track{ height:6px; background:var(--mmv-rail); border-radius:999px }
   .mmv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
 
-  /* Oblong 5-yr window indicator (same as your multi_mission) */
   .mmv-window{
     position:absolute; top:50%; transform:translateY(-50%);
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
@@ -94,37 +94,53 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   }
 </style>
 
-<!-- ===== Parameter toolbar (links like single_mission) ===== -->
+<!-- ===== Toolbar: Parameter dropdown + Hillshade toggle ===== -->
 <div class="adh-toolbar">
-  <div id="adh-param-dropdown" class="w3-dropdown-hover adh-param">
-    <span class="adh-param-label">Parameter:</span>
-    <button class="w3-button">
-      <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
-    </button>
-    <div class="w3-dropdown-content w3-bar-block w3-card-4">
-      <?php
-        // Base URL that preserves tab, hillshade, and (optional) view
-        $base = "index.php?active_tab=annual_dh"
-              . "&hillshade=" . urlencode($hillshade)
-              . "&annual_view=" . urlencode($annual_view);
-        foreach ($PARAMS as $key => $label):
-      ?>
-        <a class="w3-bar-item w3-button"
-           href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
-           <?php echo h($label); ?>
-        </a>
-      <?php endforeach; ?>
+  <div class="adh-group">
+    <div id="adh-param-dropdown" class="w3-dropdown-hover adh-param">
+      <span class="adh-param-label">Parameter:</span>
+      <button class="w3-button">
+        <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="w3-dropdown-content w3-bar-block w3-card-4">
+        <?php
+          $base = "index.php?active_tab=annual_dh"
+                . "&hillshade=" . urlencode($hillshade)
+                . "&annual_view=" . urlencode($annual_view);
+          foreach ($PARAMS as $key => $label):
+        ?>
+          <a class="w3-bar-item w3-button"
+             href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
+             <?php echo h($label); ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- Hillshade toggle (inline, uses global JS handler) -->
+    <div class="adh-hs">
+      <form id="hillshade-form" method="POST" style="display:none;">
+        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+        <input type="hidden" name="active_tab" value="annual_dh">
+        <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
+        <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
+      </form>
+
+      <label for="toggle-hillshade" class="toggle-text">Hillshade</label>
+      <label class="switch">
+        <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
+        <span class="slider round"></span>
+      </label>
     </div>
   </div>
 </div>
 
-<!-- ===== Video player (same structure your JS already binds to) ===== -->
+<!-- ===== Video player ===== -->
 <div class="mmv-wrap" id="annual-dh-player"
      data-start="1991-01"
      data-end="2025-12"
      data-start-label="Jan 1991"
      data-end-label="Dec 2025">
-  <!-- Controls (row order can follow your standard if you have it; keep minimal here) -->
   <div class="mmv-controls" role="group" aria-label="Video controls">
     <div class="mmv-left">
       <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
@@ -169,7 +185,6 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
       data-src-vp9-hs="<?php echo h($src_vp9_hs); ?>"
       data-src-h264-hs="<?php echo h($src_h264_hs); ?>"
     >
-      <!-- Initial active sources (browser chooses) -->
       <source src="<?php echo h($src_av1);  ?>" type="video/webm; codecs=av01.0.05M.08">
       <source src="<?php echo h($src_vp9);  ?>" type="video/webm; codecs=vp9">
       <source src="<?php echo h($src_h264); ?>" type="video/mp4">
@@ -177,3 +192,197 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     </video>
   </div>
 </div>
+<script>
+(function () {
+  /* ---------------- utils ---------------- */
+  function parseYYYYMM(s){ const m=(s||'').match(/^(\d{4})-(\d{2})$/); return m?{y:+m[1],m:+m[2]}:null; }
+  function monthsBetween(a,b){ if(!a||!b) return 0; return (b.y-a.y)*12 + (b.m-a.m) + 1; }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
+  function pctToTime(p,d){ return (p/1000)*(d||0); }
+
+  /* --------------- one player --------------- */
+  function initOnePlayer(root){
+    if (!root || root.dataset.bound === '1') return;
+
+    var v      = root.querySelector('video');
+    var bPlay  = root.querySelector('[data-role="play"]');
+    var seek   = root.querySelector('[data-role="seek"]');
+    var speed  = root.querySelector('[data-role="speed"]');
+    var winEl  = root.querySelector('.mmv-window');
+    var rail   = root.querySelector('.mmv-scrub-wrap');
+
+    // Hillshade (same ids as other tabs)
+    var hsToggle = root.querySelector('#toggle-hillshade');
+    var hsForm   = root.querySelector('#hillshade-form');
+    var hsInput  = root.querySelector('#hillshade-input');
+    var hsTab    = root.querySelector('#active_tab_input');
+
+    if (!v || !seek || !rail || !winEl) return;
+
+    /* ---- timeline for window width ---- */
+    var startISO = root.dataset.start || '1991-01';
+    var endISO   = root.dataset.end   || '2025-12';
+    var start    = parseYYYYMM(startISO);
+    var end      = parseYYYYMM(endISO);
+    var totalM   = Math.max(1, monthsBetween(start, end)); // guard
+    var windowM  = 24; // 2 year
+
+    // sizing
+    var railW = 0, windowW = 0, initialEndApplied = false;
+
+    function measureRailWidth(){
+      // Prefer the actual visible rail width
+      const r = (rail.getBoundingClientRect().width || 0);
+      const s = (seek.getBoundingClientRect().width || 0);
+      railW = Math.max(r, s, 0);
+      // Compute the 5-year window width; keep it visible
+      windowW = clamp(railW * (windowM / totalM), 16, railW);
+      winEl.style.width = windowW + 'px';
+    }
+
+    function placeWindow(pct){
+      // pct: 0..1000
+      const x = clamp((pct/1000) * railW - windowW/2, 0, Math.max(0, railW - windowW));
+      winEl.style.left = x + 'px';
+    }
+
+    // Keep the “window” above the track and clicks going to the range
+    winEl.style.pointerEvents = 'none';
+    winEl.style.zIndex = '2';
+    seek.style.position = 'relative';
+    seek.style.zIndex = '1';
+
+    /* ---- UI sync (during playback) ---- */
+    var seeking = false, wasPlaying = false, seekRAF = null;
+
+    function updateProgress(){
+      if (!isFinite(v.duration)) return;
+      if (seeking) return;
+      var p = (v.currentTime / v.duration) * 1000 || 0;
+      seek.value = clamp(Math.round(p), 0, 1000);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      placeWindow(seek.value);
+    }
+
+    v.addEventListener('timeupdate', updateProgress);
+    v.addEventListener('progress',   updateProgress);
+
+    /* ---- play/pause ---- */
+    function syncPlayIcon(){
+      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
+    }
+    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
+
+    /* ---- seeking (Chrome-friendly live scrub) ---- */
+    function beginSeek(){ seeking = true; wasPlaying = !v.paused; if (wasPlaying) v.pause(); }
+    function finishSeek(){
+      if (!seeking) return;
+      var nt = pctToTime(seek.value, v.duration);
+      v.currentTime = nt;
+      seeking = false;
+      if (wasPlaying) v.play();
+    }
+
+    seek.addEventListener('pointerdown', beginSeek);
+    seek.addEventListener('mousedown',   beginSeek);
+    seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+    seek.addEventListener('input', function(){
+      var nt = pctToTime(seek.value, v.duration);
+      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      placeWindow(seek.value);
+      if (seekRAF) cancelAnimationFrame(seekRAF);
+      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
+    });
+
+    document.addEventListener('pointerup',   finishSeek);
+    document.addEventListener('mouseup',     finishSeek);
+    document.addEventListener('touchend',    finishSeek);
+    seek.addEventListener('pointercancel',   finishSeek);
+    seek.addEventListener('change',          finishSeek);
+
+    /* ---- speed ---- */
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
+
+    /* ---- keyboard ---- */
+    root.tabIndex = 0;
+    root.addEventListener('keydown', function(e){
+      switch(e.key){
+        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+      }
+    });
+
+    /* ---- fit wrapper to the video’s natural width ---- */
+    var wrap = root.closest('.mmv-wrap') || root;
+    function fitToNaturalWidth(){
+      if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
+    }
+
+    /* ---- initialize slider UI to END to match poster (UI only) ---- */
+    function setToEndUI(){
+      if (initialEndApplied) return;
+      seek.value = 1000;
+      root.style.setProperty('--mmv-fill', '100%');
+      placeWindow(1000);
+      initialEndApplied = true;
+    }
+
+    // Measure rail + set initial UI immediately (so the window has size)
+    measureRailWidth();
+    setToEndUI();
+
+    // When metadata arrives (duration known), keep sizes and UI sane
+    v.addEventListener('loadedmetadata', function(){
+      fitToNaturalWidth();
+      // re-measure (layout may change after fonts/video aspect settle)
+      requestAnimationFrame(function(){
+        measureRailWidth();
+        if (initialEndApplied) placeWindow(seek.value);
+        else setToEndUI();
+      });
+    });
+
+    if (v.readyState >= 1){
+      fitToNaturalWidth();
+      requestAnimationFrame(function(){
+        measureRailWidth();
+        if (initialEndApplied) placeWindow(seek.value);
+        else setToEndUI();
+      });
+    }
+
+    // React to container/viewport resizes
+    if ('ResizeObserver' in window){
+      const ro = new ResizeObserver(function(){ measureRailWidth(); placeWindow(seek.value || 1000); });
+      ro.observe(rail);
+    }
+    window.addEventListener('resize', function(){
+      measureRailWidth();
+      placeWindow(seek.value || 1000);
+    });
+
+    /* ---- hillshade POST toggle (same flow as other tabs) ---- */
+    if (hsToggle && hsForm && hsInput){
+      if (hsTab) hsTab.value = 'annual_dh';
+      hsToggle.addEventListener('change', function(){
+        hsInput.value = this.checked ? 'show' : 'hide';
+        if (hsTab) hsTab.value = 'annual_dh';
+        hsForm.submit();
+      });
+    }
+
+    syncPlayIcon();
+    root.dataset.bound = '1';
+  }
+
+  /* --------------- boot / rebind --------------- */
+  function initAll(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
+  document.addEventListener('DOMContentLoaded', initAll);
+  // for lazy-loaded tabs
+  window.rebindMultiMissionHandlers = initAll;
+})();
+</script>
