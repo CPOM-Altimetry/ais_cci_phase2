@@ -1,7 +1,7 @@
 <?php
-// annual_dh.php — Annual dH video with parameter selector + hillshade toggle
+// annual_dh.php — Annual dH video with parameter selector (full-width bar) + hillshade toggle
 
-// Expect these from php_init.php (as in other tabs)
+// From php_init.php (consistent with other tabs)
 $hillshade   = isset($hillshade) ? $hillshade : 'hide'; // 'show' | 'hide'
 $active_tab  = isset($active_tab) ? $active_tab : 'annual_dh';
 
@@ -43,22 +43,36 @@ $src_h264= $use_hs ? $src_h264_hs: $src_h264_no;
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
-<h3>Annual dH (time series)</h3>
+
+<!-- ===== Intro (put your original text here; tweak as desired) ===== -->
+<h3>Annual dH (1991–2025) — time series</h3>
+<p>
+  This section shows time-series animations of the annual surface elevation change (dH) over the Antarctic Ice Sheet.
+  Use the parameter selector to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
+  <em>glaciological basin ID</em>. You can also toggle a hill-shaded backdrop for additional context.
+</p>
 
 <style>
-  /* Toolbar (parameter + hillshade) */
-  .adh-toolbar{
+  /* Full-width parameter bar to match single_mission.php */
+  .adh-bar.light-grey-row{
+    margin: 10px 0;
+    padding: 10px 0;
+  }
+  .adh-bar .inner{
+    /* keep content aligned with page content width if you’re using a max-width layout elsewhere */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 12px;
     display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-    padding:10px 0; margin-bottom:6px;
   }
   .adh-group{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .adh-param-label{ font-weight:600; }
 
+  .adh-param-label{ font-weight:600; }
   .adh-param .w3-button{ background:#21578b; color:#fff; border-radius:6px; }
   .adh-param .w3-dropdown-content .w3-button{ background:#fff; color:#111; text-align:left; }
 
   /* Inline hillshade toggle uses your global .switch/.slider styles */
-  .adh-hs{ display:flex; align-items:center; gap:8px; }
+  .adh-hs{ display:flex; align-items:center; gap:8px; margin-left:6px; }
   .adh-hs .switch{ transform:scale(.95); transform-origin:left center; }
   .adh-hs .toggle-text{ font-weight:600; }
 
@@ -94,43 +108,46 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   }
 </style>
 
-<!-- ===== Toolbar: Parameter dropdown + Hillshade toggle ===== -->
-<div class="adh-toolbar">
-  <div class="adh-group">
-    <div id="adh-param-dropdown" class="w3-dropdown-hover adh-param">
-      <span class="adh-param-label">Parameter:</span>
-      <button class="w3-button">
-        <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
-      </button>
-      <div class="w3-dropdown-content w3-bar-block w3-card-4">
-        <?php
-          $base = "index.php?active_tab=annual_dh"
-                . "&hillshade=" . urlencode($hillshade)
-                . "&annual_view=" . urlencode($annual_view);
-          foreach ($PARAMS as $key => $label):
-        ?>
-          <a class="w3-bar-item w3-button"
-             href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
-             <?php echo h($label); ?>
-          </a>
-        <?php endforeach; ?>
+<!-- ===== Full-width parameter & hillshade bar (matches single_mission.php) ===== -->
+<div class="adh-bar light-grey-row">
+  <div class="inner">
+    <div class="adh-group">
+      <!-- Parameter dropdown -->
+      <div id="adh-param-dropdown" class="w3-dropdown-hover adh-param">
+        <span class="adh-param-label">Parameter:</span>
+        <button class="w3-button">
+          <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+          <?php
+            $base = "index.php?active_tab=annual_dh"
+                  . "&hillshade=" . urlencode($hillshade)
+                  . "&annual_view=" . urlencode($annual_view);
+            foreach ($PARAMS as $key => $label):
+          ?>
+            <a class="w3-bar-item w3-button"
+               href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
+               <?php echo h($label); ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
       </div>
-    </div>
 
-    <!-- Hillshade toggle (inline, uses global JS handler) -->
-    <div class="adh-hs">
-      <form id="hillshade-form" method="POST" style="display:none;">
-        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-        <input type="hidden" name="active_tab" value="annual_dh">
-        <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
-        <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
-      </form>
+      <!-- Hillshade toggle (inline, same IDs as other tabs; auto-submits via your global JS) -->
+      <div class="adh-hs">
+        <form id="hillshade-form" method="POST" style="display:none;">
+          <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+          <input type="hidden" name="active_tab" value="annual_dh">
+          <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
+          <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
+        </form>
 
-      <label for="toggle-hillshade" class="toggle-text">Hillshade</label>
-      <label class="switch">
-        <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
-        <span class="slider round"></span>
-      </label>
+        <label for="toggle-hillshade" class="toggle-text">Hillshade</label>
+        <label class="switch">
+          <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
+          <span class="slider round"></span>
+        </label>
+      </div>
     </div>
   </div>
 </div>
@@ -192,6 +209,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     </video>
   </div>
 </div>
+
 <script>
 (function () {
   /* ---------------- utils ---------------- */
