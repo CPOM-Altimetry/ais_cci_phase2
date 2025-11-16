@@ -1,11 +1,11 @@
 <?php
-// annual_dh.php — Annual dH video with parameter selector (full-width bar) + hillshade toggle
+// annual_dh.php — Annual dH video with parameter selector (full-width bar) + hillshade toggle (right-aligned)
 
-// From php_init.php (consistent with other tabs)
+// From php_init.php
 $hillshade   = isset($hillshade) ? $hillshade : 'hide'; // 'show' | 'hide'
 $active_tab  = isset($active_tab) ? $active_tab : 'annual_dh';
 
-// Parameter selector (like single_mission.php but our list)
+// Parameter selector values
 $param = isset($_GET['ql_param']) ? (string)$_GET['ql_param'] : 'dh';
 $PARAMS = [
   'dh'            => 'dH',
@@ -19,7 +19,7 @@ if (!isset($PARAMS[$param])) $param = 'dh';
 $annual_view = isset($_GET['annual_view']) ? (string)$_GET['annual_view'] : 'ais';
 $view_suffix = ($annual_view === 'ase') ? '-ase' : '';
 
-// Construct asset names (per your spec)
+// Construct asset names
 $dir  = 'annual_dh_quicklooks';
 $base = 'annual_dh';
 
@@ -44,7 +44,7 @@ $src_h264= $use_hs ? $src_h264_hs: $src_h264_no;
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 
-<!-- ===== Intro (put your original text here; tweak as desired) ===== -->
+<!-- ===== Intro ===== -->
 <h3>Annual dH (1991–2025) — time series</h3>
 <p>
   This section shows time-series animations of the annual surface elevation change (dH) over the Antarctic Ice Sheet.
@@ -59,24 +59,45 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     padding: 10px 0;
   }
   .adh-bar .inner{
-    /* keep content aligned with page content width if you’re using a max-width layout elsewhere */
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between; /* <-- hillshade to the right */
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .adh-left, .adh-right{
     display:flex; align-items:center; gap:16px; flex-wrap:wrap;
   }
-  .adh-group{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-  .adh-param-label{ font-weight:600; }
-  .adh-param .w3-button{ background:#21578b; color:#fff; border-radius:6px; }
-  .adh-param .w3-dropdown-content .w3-button{ background:#fff; color:#111; text-align:left; }
+  /* Parameter dropdown */
+  .adh-param-wrap{ display:flex; align-items:center; gap:10px; }
+  .adh-param-label{
+    font-weight:600;
+    background: transparent;     /* <-- same as bar bg */
+    color: inherit;              /* inherit text color */
+    padding: 0;                  /* remove pill look */
+    border-radius: 0;            /* remove pill look */
+  }
+  #adh-param-dropdown .w3-button{
+    background:#21578b; color:#fff; border-radius:6px;
+  }
+  #adh-param-dropdown .w3-dropdown-content .w3-button{
+    background:#fff; color:#111; text-align:left;
+  }
 
-  /* Inline hillshade toggle uses your global .switch/.slider styles */
-  .adh-hs{ display:flex; align-items:center; gap:8px; margin-left:6px; }
+  /* Hillshade toggle on the right; reuse your global .switch/.slider */
+  .adh-hs{
+    display:flex; align-items:center; gap:8px;
+  }
   .adh-hs .switch{ transform:scale(.95); transform-origin:left center; }
   .adh-hs .toggle-text{ font-weight:600; }
 
-  /* Player shell */
+  /* Player shell (unchanged) */
   :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
   .mmv-wrap{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
   .mmv-media{ background:#000; }
@@ -108,41 +129,44 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   }
 </style>
 
-<!-- ===== Full-width parameter & hillshade bar (matches single_mission.php) ===== -->
+<!-- ===== Full-width parameter & hillshade bar ===== -->
 <div class="adh-bar light-grey-row">
   <div class="inner">
-    <div class="adh-group">
-      <!-- Parameter dropdown -->
-      <div id="adh-param-dropdown" class="w3-dropdown-hover adh-param">
+    <div class="adh-left">
+      <div class="adh-param-wrap">
         <span class="adh-param-label">Parameter:</span>
-        <button class="w3-button">
-          <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="w3-dropdown-content w3-bar-block w3-card-4">
-          <?php
-            $base = "index.php?active_tab=annual_dh"
-                  . "&hillshade=" . urlencode($hillshade)
-                  . "&annual_view=" . urlencode($annual_view);
-            foreach ($PARAMS as $key => $label):
-          ?>
-            <a class="w3-bar-item w3-button"
-               href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
-               <?php echo h($label); ?>
-            </a>
-          <?php endforeach; ?>
+        <div id="adh-param-dropdown" class="w3-dropdown-hover">
+          <button class="w3-button">
+            <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="w3-dropdown-content w3-bar-block w3-card-4">
+            <?php
+              $base = "index.php?active_tab=annual_dh"
+                    . "&hillshade=" . urlencode($hillshade)
+                    . "&annual_view=" . urlencode($annual_view);
+              foreach ($PARAMS as $key => $label):
+            ?>
+              <a class="w3-bar-item w3-button"
+                 href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
+                 <?php echo h($label); ?>
+              </a>
+            <?php endforeach; ?>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Hillshade toggle (inline, same IDs as other tabs; auto-submits via your global JS) -->
+    <div class="adh-right">
+      <!-- Hillshade toggle (right aligned) -->
+      <form id="hillshade-form" method="POST" style="display:none;">
+        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+        <input type="hidden" name="active_tab" value="annual_dh">
+        <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
+        <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
+      </form>
+
       <div class="adh-hs">
-        <form id="hillshade-form" method="POST" style="display:none;">
-          <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-          <input type="hidden" name="active_tab" value="annual_dh">
-          <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
-          <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
-        </form>
-
-        <label for="toggle-hillshade" class="toggle-text">Hillshade</label>
+        <label class="toggle-text" for="toggle-hillshade">Hillshade</label>
         <label class="switch">
           <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
           <span class="slider round"></span>
@@ -209,6 +233,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     </video>
   </div>
 </div>
+
 
 <script>
 (function () {
