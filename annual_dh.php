@@ -101,7 +101,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
   .mmv-wrap{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
   .mmv-media{ background:#000; }
-  .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:780/780; background:#000; }
+  .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
 
   .mmv-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
   .mmv-left,.mmv-right{ display:flex; align-items:center; gap:10px }
