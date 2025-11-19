@@ -213,7 +213,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
           <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
           <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
-        <input type="hidden" name="active_tab" value="multi_mission">
+        <input type="hidden" name="active_tab" value="annual_dh">
         <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
       </form>
 
