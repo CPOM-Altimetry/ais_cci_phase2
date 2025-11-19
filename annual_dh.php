@@ -16,15 +16,11 @@ $PARAMS = [
 if (!isset($PARAMS[$param])) $param = 'dh';
 
 // Optional view (ais default / ase)
-$annual_view = isset($_GET['mm_view']) ? (string)$_GET['mm_view'] : 'ais';
-$view_suffix = ($annual_view === 'ase') ? '-ase' : '';
 
 // ---- View selection: 'ais' (default) or 'ase'
 $mm_view = isset($_POST['mm_view']) ? (($_POST['mm_view']==='ase') ? 'ase' : 'ais')
          : (isset($_GET['mm_view'])  ? (($_GET['mm_view']==='ase')  ? 'ase' : 'ais') : 'ais');
-
-// ---- Pick asset suffix based on view
-$suffix = ($mm_view === 'ase') ? '.dh-ase' : '.sec';
+$view_suffix = ($mm_view === 'ase') ? '-ase' : '';
 
 // Construct asset names
 $dir  = 'annual_dh_quicklooks';
