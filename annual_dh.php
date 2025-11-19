@@ -242,10 +242,10 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
 <!-- ===== Video player ===== -->
 <div class="mmv-wrap-annual-dh" id="annual-dh-player"
-     data-start="1991-01"
-     data-end="2025-12"
+     data-start="1993-01"
+     data-end="2025-08"
      data-start-label="Jan 1993"
-     data-end-label="Sep 2025">
+     data-end-label="Aug 2025">
   <div class="mmv-controls-annual-dh" role="group" aria-label="Video controls">
     <div class="mmv-left">
       <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
