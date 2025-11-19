@@ -35,7 +35,7 @@
                 <div class="control-row">
                     <!-- Parameter dropdown -->
                     <div id="product_dropdown" class="w3-dropdown-hover">
-                        <span id="parameter_txt">Parameter:</span>
+                        <span id="parameter_txt">Product Parameter:</span>
                         <button class="w3-button my-button-color">
                             <?php echo htmlspecialchars($ql_param_str, ENT_QUOTES); ?> <i class="fa fa-caret-down"></i>
                         </button>
