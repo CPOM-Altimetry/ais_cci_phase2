@@ -105,7 +105,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
   /* Player shell (unchanged) */
   :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
-  .mmv-wrap{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
+  .mmv-wrap-annual-dh{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
   .mmv-media{ background:#000; }
   .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
 
@@ -134,7 +134,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     pointer-events:none; width:64px;
   }
   /* 1) Don't clip the dropdown with the outer card */
-  .mmv-wrap { overflow: visible; }
+  .mmv-wrap-annual-dh { overflow: visible; }
 
   /* Keep the rounded-corner clipping only on the media area */
   .mmv-media {
@@ -167,7 +167,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 }
 
 /* Player controls can stay lower */
-.mmv-wrap { position: relative; z-index: 0; }
+.mmv-wrap-annual-dh { position: relative; z-index: 0; }
 .mmv-controls { position: relative; z-index: 1; }
 
 /* (optional) ensure individual slider bits don't float above the dropdown */
@@ -227,7 +227,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 </div>
 
 <!-- ===== Video player ===== -->
-<div class="mmv-wrap" id="annual-dh-player"
+<div class="mmv-wrap-annual-dh" id="annual-dh-player"
      data-start="1991-01"
      data-end="2025-12"
      data-start-label="Jan 1993"
@@ -410,7 +410,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     });
 
     /* ---- fit wrapper to the video’s natural width ---- */
-    var wrap = root.closest('.mmv-wrap') || root;
+    var wrap = root.closest('.mmv-wrap-annual-dh') || root;
     function fitToNaturalWidth(){
       if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
     }
@@ -473,7 +473,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   }
 
   /* --------------- boot / rebind --------------- */
-  function initAll(){ document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer); }
+  function initAll(){ document.querySelectorAll('.mmv-wrap-annual-dh').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAll);
   // for lazy-loaded tabs
   window.rebindMultiMissionHandlers = initAll;
