@@ -26,7 +26,7 @@ $hillshade = $_SESSION['hillshade'] ?? 'show'; // default ON
 // Allowed tabs: intro, single_mission, is2_sec, multi_mission, annual_dh
 // Precedence: POST > GET > inferred-from-URL > session > 'intro'
 // ---------------------------------------------------------------------------
-$allowed_tabs = ['intro', 'single_mission', 'is2_sec', 'multi_mission', 'annual_dh'];
+$allowed_tabs = ['intro', 'single_mission', 'is2_sec', 'multi_mission', 'annual_dh','download'];
 
 // start from session or default
 $active_tab = $_SESSION['active_tab'] ?? 'intro';
