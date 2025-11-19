@@ -259,7 +259,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
         <div class="mmv-window" aria-hidden="true"></div>
         <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
       </div>
-      <span class="mmv-bound mmv-end" data-role="label-end">Sep 2025</span>
+      <span class="mmv-bound mmv-end" data-role="label-end">Aug 2025</span>
     </div>
 
     <div class="mmv-right">
@@ -328,7 +328,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
     /* ---- timeline for window width ---- */
     var startISO = root.dataset.start || '1993-01';
-    var endISO   = root.dataset.end   || '2025-12';
+    var endISO   = root.dataset.end   || '2025-08';
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
     var totalM   = Math.max(1, monthsBetween(start, end)); // guard
