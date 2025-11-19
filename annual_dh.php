@@ -179,52 +179,70 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
 </style>
 
-<!-- ===== Full-width parameter & hillshade bar ===== -->
-<div class="adh-bar light-grey-row">
-  <div class="inner">
-    <div class="adh-left">
-      <div class="adh-param-wrap">
-        <span class="adh-param-label">Product Parameter:</span>
-        <div id="adh-param-dropdown" class="w3-dropdown-hover">
-          <button class="w3-button">
-            <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
-          </button>
-          <div class="w3-dropdown-content w3-bar-block w3-card-4">
-            <?php
-              $base = "index.php?active_tab=annual_dh"
-                    . "&hillshade=" . urlencode($hillshade)
-                    . "&annual_view=" . urlencode($annual_view);
-              foreach ($PARAMS as $key => $label):
-            ?>
-              <a class="w3-bar-item w3-button"
-                 href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
-                 <?php echo h($label); ?>
-              </a>
-            <?php endforeach; ?>
-          </div>
+<!-- Parameter + View + Hillshade bar -->
+<div class="light-grey-row annual-dh-param-row">
+  <div class="annual-dh-param-inner">
+
+    <div class="annual-dh-param-left">
+      <form id="annual-param-view-form" method="POST">
+        <!-- Product parameter selector -->
+        <span class="annual-dh-param-label">Product Parameter:</span>
+        <select
+          id="annual-param-select"
+          name="annual_param"
+          onchange="this.form.submit()"
+        >
+          <option value="dh"           <?php if ($annual_param === 'dh')           echo 'selected'; ?>>dH</option>
+          <option value="uncertainty"  <?php if ($annual_param === 'uncertainty')  echo 'selected'; ?>>Uncertainty of dH</option>
+          <option value="surface_type" <?php if ($annual_param === 'surface_type') echo 'selected'; ?>>Surface Type</option>
+          <option value="basin_id"     <?php if ($annual_param === 'basin_id')     echo 'selected'; ?>>Glaciological Basin ID</option>
+        </select>
+
+        <!-- View selector -->
+        <span class="annual-dh-param-label" style="margin-left:16px;">View:</span>
+        <select
+          id="annual-view-select"
+          name="annual_view"
+          onchange="this.form.submit()"
+        >
+          <option value="ais" <?php if ($annual_view === 'ais') echo 'selected'; ?>>
+            Antarctic Ice Sheet
+          </option>
+          <option value="ase" <?php if ($annual_view === 'ase') echo 'selected'; ?>>
+            ASE: PIG / Thwaites Glaciers
+          </option>
+        </select>
+
+        <!-- keep tab + hillshade state on post -->
+        <input type="hidden" name="active_tab" value="annual_dh">
+        <input type="hidden" name="hillshade" value="<?php echo htmlspecialchars($hillshade, ENT_QUOTES); ?>">
+      </form>
+    </div>
+
+    <div class="annual-dh-param-right">
+      <!-- Hillshade toggle (same IDs/classes as other tabs) -->
+      <div class="hillshade-toggle-wrap">
+        <div class="toggle-label">Hillshade</div>
+
+        <div class="toggle-switch<?php echo ($hillshade === 'show') ? ' on' : ''; ?>">
+          <form id="hillshade-form" method="POST" style="display:none;">
+            <input type="hidden" name="hillshade" id="hillshade-input"
+                   value="<?php echo $hillshade === 'show' ? 'show' : 'hide'; ?>">
+            <input type="hidden" name="active_tab" value="annual_dh">
+          </form>
+
+          <label class="switch">
+            <input id="toggle-hillshade" type="checkbox"
+                   <?php echo $hillshade === 'show' ? 'checked' : ''; ?>>
+            <span class="slider round"></span>
+          </label>
         </div>
       </div>
     </div>
 
-    <div class="adh-right">
-      <!-- Hillshade toggle (right aligned) -->
-      <form id="hillshade-form" method="POST" style="display:none;">
-        <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-        <input type="hidden" name="active_tab" value="annual_dh">
-        <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
-        <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
-      </form>
-
-      <div class="adh-hs">
-        <label class="toggle-text" for="toggle-hillshade">Hillshade</label>
-        <label class="switch">
-          <input id="toggle-hillshade" type="checkbox" <?php echo $use_hs ? 'checked' : ''; ?>>
-          <span class="slider round"></span>
-        </label>
-      </div>
-    </div>
   </div>
 </div>
+
 
 <!-- ===== Video player ===== -->
 <div class="mmv-wrap" id="annual-dh-player"
