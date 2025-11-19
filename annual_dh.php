@@ -45,12 +45,24 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 
 <!-- ===== Intro ===== -->
-<h3>Annual dH (1991–2025) — time series</h3>
+<h3>Cumulative Annual dH (1993–2025)</h3>
 <p>
   This section shows time-series animations of the annual surface elevation change (dH) over the Antarctic Ice Sheet.
   Use the parameter selector to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
   <em>glaciological basin ID</em>. You can also toggle a hill-shaded backdrop for additional context.
 </p>
+
+<p>These products provide the cumulative surface height 
+    change in each 5km grid cell since the start of the 
+    radar altimetry record, derived from cross-calibrated 
+multi-mission radar altimetry measurements from ERS-1, ERS-2, ENVISAT,
+CryoSat-2, Sentinel-3A, and Sentinel-3B. Products are stepped by 
+one year to provide the change of height up until the end of that year.</p>
+
+<p>Each frame of the visualization below contains a plot the Cumulative Annual dH from a single product.
+    Use the controls to view the full time range of surface elevation change.</p>
+     <p>Use the parameter selector to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
+  <em>glaciological basin ID</em>. You can also toggle a hill-shaded backdrop for additional context.</p>
 
 <style>
   /* Full-width parameter bar to match single_mission.php */
