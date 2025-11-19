@@ -50,7 +50,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 <!-- ===== Intro ===== -->
 <h3>Cumulative Annual dH (1993–2025)</h3>
 
-<p>These products provide the cumulative surface height 
+<p><?php echo $adh_view;?>These products provide the cumulative surface height 
     change in each 5km grid cell since the start of the 
     radar altimetry record, derived from cross-calibrated 
 multi-mission radar altimetry measurements from ERS-1, ERS-2, ENVISAT,
