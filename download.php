@@ -217,7 +217,7 @@ foreach ($products as $id => $meta) {
 <h3>Cumulative Annual dH Product Downloads</h3>
 <p>Each file contains the gridded cumulative annual surface elevation change since 1st Jan 1993, calculated from cross-calibrated 
   radar altimetry missions. 
-  The <b>first file</b> shown is the latest 5-year period. 
+  The <b>first file</b> shown is the cumulative dh from the latest available month of data. 
 The <b>second file</b>
   is a zip of all  netcdf files since 1993, stepped by 1 year.</p>
 <table class="downloads">
