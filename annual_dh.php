@@ -133,6 +133,29 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
     pointer-events:none; width:64px;
   }
+  /* 1) Don't clip the dropdown with the outer card */
+  .mmv-wrap { overflow: visible; }
+
+  /* Keep the rounded-corner clipping only on the media area */
+  .mmv-media {
+    overflow: hidden;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+
+  /* 2) Make sure the select sits above nearby controls */
+  .mmv-controls { position: relative; overflow: visible; }
+  .param-select, .mmv-speed, select#mmp-param {
+    position: relative;
+    z-index: 1000; /* above scrub UI */
+  }
+
+  /* Lower the scrubber's stacking level */
+  .mmv-scrub-wrap, .mmv-scrub-wrap * {
+    position: relative;
+    z-index: 1;
+  }
+
 </style>
 
 <!-- ===== Full-width parameter & hillshade bar ===== -->
