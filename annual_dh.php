@@ -18,9 +18,9 @@ if (!isset($PARAMS[$param])) $param = 'dh';
 // Optional view (ais default / ase)
 
 // ---- View selection: 'ais' (default) or 'ase'
-$mm_view = isset($_POST['mm_view']) ? (($_POST['mm_view']==='ase') ? 'ase' : 'ais')
-         : (isset($_GET['mm_view'])  ? (($_GET['mm_view']==='ase')  ? 'ase' : 'ais') : 'ais');
-$view_suffix = ($mm_view === 'ase') ? '-ase' : '';
+$adh_view = isset($_POST['adh_view']) ? (($_POST['adh_view']==='ase') ? 'ase' : 'ais')
+         : (isset($_GET['adh_view'])  ? (($_GET['adh_view']==='ase')  ? 'ase' : 'ais') : 'ais');
+$view_suffix = ($adh_view === 'ase') ? '-ase' : '';
 
 // Construct asset names
 $dir  = 'annual_dh_quicklooks';
@@ -107,54 +107,54 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   .adh-hs .toggle-text{ font-weight:600; }
 
   /* Player shell (unchanged) */
-  :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
-  .mmv-wrap-annual-dh{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
-  .mmv-media{ background:#000; }
-  .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
+  :root { --adhv-rail:#d7dbe0; --adhv-rail-fill:#2e7bd1; }
+  .adhv-wrap-annual-dh{ margin:10px auto; max-width:var(--adhv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
+  .adhv-media{ background:#000; }
+  .adhv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
 
-  .mmv-controls-annual-dh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
-  .mmv-left,.mmv-right{ display:flex; align-items:center; gap:10px }
-  .mmv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
+  .adhv-controls-annual-dh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
+  .adhv-left,.adhv-right{ display:flex; align-items:center; gap:10px }
+  .adhv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
 
-  .mmv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
-  .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
-  .mmv-btn .material-icons{ font-size:20px; line-height:1 }
+  .adhv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
+  .adhv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
+  .adhv-btn .material-icons{ font-size:20px; line-height:1 }
 
-  .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
-  .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
+  .adhv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
+  .adhv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
-  .mmv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
-  .mmv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer }
-  .mmv-range:focus{ outline:none }
-  .mmv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--mmv-rail-fill) var(--mmv-fill,0%),var(--mmv-rail) var(--mmv-fill,0%)); }
-  .mmv-range::-webkit-slider-thumb{ appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0 }
-  .mmv-range::-moz-range-track{ height:6px; background:var(--mmv-rail); border-radius:999px }
-  .mmv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
+  .adhv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
+  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer }
+  .adhv-range:focus{ outline:none }
+  .adhv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--adhv-rail-fill) var(--adhv-fill,0%),var(--adhv-rail) var(--adhv-fill,0%)); }
+  .adhv-range::-webkit-slider-thumb{ appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0 }
+  .adhv-range::-moz-range-track{ height:6px; background:var(--adhv-rail); border-radius:999px }
+  .adhv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
 
-  .mmv-window{
+  .adhv-window{
     position:absolute; top:50%; transform:translateY(-50%);
     height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
     pointer-events:none; width:64px;
   }
   /* 1) Don't clip the dropdown with the outer card */
-  .mmv-wrap-annual-dh { overflow: visible; }
+  .adhv-wrap-annual-dh { overflow: visible; }
 
   /* Keep the rounded-corner clipping only on the media area */
-  .mmv-media {
+  .adhv-media {
     overflow: hidden;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
   }
 
   /* 2) Make sure the select sits above nearby controls */
-  .mmv-controls-annual-dh { position: relative; overflow: visible; }
-  .param-select, .mmv-speed, select#mmp-param {
+  .adhv-controls-annual-dh { position: relative; overflow: visible; }
+  .param-select, .adhv-speed, select#mmp-param {
     position: relative;
     z-index: 1000; /* above scrub UI */
   }
 
   /* Lower the scrubber's stacking level */
-  .mmv-scrub-wrap, .mmv-scrub-wrap * {
+  .adhv-scrub-wrap, .adhv-scrub-wrap * {
     position: relative;
     z-index: 1;
   }
@@ -170,11 +170,11 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 }
 
 /* Player controls can stay lower */
-.mmv-wrap-annual-dh { position: relative; z-index: 0; }
-.mmv-controls-annual-dh { position: relative; z-index: 1; }
+.adhv-wrap-annual-dh { position: relative; z-index: 0; }
+.adhv-controls-annual-dh { position: relative; z-index: 1; }
 
 /* (optional) ensure individual slider bits don't float above the dropdown */
-.mmv-scrub-wrap, .mmv-range, .mmv-window {
+.adhv-scrub-wrap, .adhv-range, .adhv-window {
   position: relative;
   z-index: 1;
 }
@@ -210,11 +210,11 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     </div>
 
     <!-- View selector (wired via form submit; preserves hillshade + tab) -->
-      <form class="mmv-view" id="mmv-view-form" method="POST" action="">
-        <label for="mmv-view-select">View:</label>
-        <select id="mmv-view-select" class="mmv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
-          <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
-          <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
+      <form class="adhv-view" id="adhv-view-form" method="POST" action="">
+        <label for="adhv-view-select">View:</label>
+        <select id="adhv-view-select" class="adhv-view-select" name="adh_view" aria-label="Select view" onchange="this.form.submit()">
+          <option value="ais" <?php echo $adh_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
+          <option value="ase" <?php echo $adh_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
         <input type="hidden" name="active_tab" value="annual_dh">
         <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
@@ -241,29 +241,29 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 </div>
 
 <!-- ===== Video player ===== -->
-<div class="mmv-wrap-annual-dh" id="annual-dh-player"
+<div class="adhv-wrap-annual-dh" id="annual-dh-player"
      data-start="1993-01"
      data-end="2025-08"
      data-start-label="Jan 1993"
      data-end-label="Aug 2025">
-  <div class="mmv-controls-annual-dh" role="group" aria-label="Video controls">
-    <div class="mmv-left">
-      <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
+  <div class="adhv-controls-annual-dh" role="group" aria-label="Video controls">
+    <div class="adhv-left">
+      <button class="adhv-btn" data-role="play" aria-label="Play/Pause">
         <span class="material-icons">play_arrow</span>
       </button>
     </div>
 
-    <div class="mmv-center">
-      <span class="mmv-bound mmv-start" data-role="label-start">Jan 1993</span>
-      <div class="mmv-scrub-wrap">
-        <div class="mmv-window" aria-hidden="true"></div>
-        <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+    <div class="adhv-center">
+      <span class="adhv-bound adhv-start" data-role="label-start">Jan 1993</span>
+      <div class="adhv-scrub-wrap">
+        <div class="adhv-window" aria-hidden="true"></div>
+        <input class="adhv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
       </div>
-      <span class="mmv-bound mmv-end" data-role="label-end">Aug 2025</span>
+      <span class="adhv-bound adhv-end" data-role="label-end">Aug 2025</span>
     </div>
 
-    <div class="mmv-right">
-      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
+    <div class="adhv-right">
+      <select class="adhv-speed" data-role="speed" aria-label="Playback speed">
         <option value="0.5">0.5×</option>
         <option value="0.75">0.75×</option>
         <option value="1" selected>1×</option>
@@ -274,7 +274,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     </div>
   </div>
 
-  <div class="mmv-media">
+  <div class="adhv-media">
     <video
       preload="metadata"
       playsinline
@@ -315,8 +315,8 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     var bPlay  = root.querySelector('[data-role="play"]');
     var seek   = root.querySelector('[data-role="seek"]');
     var speed  = root.querySelector('[data-role="speed"]');
-    var winEl  = root.querySelector('.mmv-window');
-    var rail   = root.querySelector('.mmv-scrub-wrap');
+    var winEl  = root.querySelector('.adhv-window');
+    var rail   = root.querySelector('.adhv-scrub-wrap');
 
     // Hillshade (same ids as other tabs)
     var hsToggle = root.querySelector('#toggle-hillshade');
@@ -367,7 +367,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
       if (seeking) return;
       var p = (v.currentTime / v.duration) * 1000 || 0;
       seek.value = clamp(Math.round(p), 0, 1000);
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      root.style.setProperty('--adhv-fill', (seek.value/10) + '%');
       placeWindow(seek.value);
     }
 
@@ -398,7 +398,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
     seek.addEventListener('input', function(){
       var nt = pctToTime(seek.value, v.duration);
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+      root.style.setProperty('--adhv-fill', (seek.value/10) + '%');
       placeWindow(seek.value);
       if (seekRAF) cancelAnimationFrame(seekRAF);
       seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
@@ -424,16 +424,16 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     });
 
     /* ---- fit wrapper to the video’s natural width ---- */
-    var wrap = root.closest('.mmv-wrap-annual-dh') || root;
+    var wrap = root.closest('.adhv-wrap-annual-dh') || root;
     function fitToNaturalWidth(){
-      if (v.videoWidth > 0) wrap.style.setProperty('--mmv-max', v.videoWidth + 'px');
+      if (v.videoWidth > 0) wrap.style.setProperty('--adhv-max', v.videoWidth + 'px');
     }
 
     /* ---- initialize slider UI to END to match poster (UI only) ---- */
     function setToEndUI(){
       if (initialEndApplied) return;
       seek.value = 1000;
-      root.style.setProperty('--mmv-fill', '100%');
+      root.style.setProperty('--adhv-fill', '100%');
       placeWindow(1000);
       initialEndApplied = true;
     }
@@ -487,7 +487,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   }
 
   /* --------------- boot / rebind --------------- */
-  function initAll(){ document.querySelectorAll('.mmv-wrap-annual-dh').forEach(initOnePlayer); }
+  function initAll(){ document.querySelectorAll('.adhv-wrap-annual-dh').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAll);
   // for lazy-loaded tabs
   window.rebindMultiMissionHandlers = initAll;
