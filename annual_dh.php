@@ -206,6 +206,17 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
       </div>
     </div>
 
+    <!-- View selector (wired via form submit; preserves hillshade + tab) -->
+      <form class="mmv-view" id="mmv-view-form" method="POST" action="">
+        <label for="mmv-view-select">View:</label>
+        <select id="mmv-view-select" class="mmv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
+          <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
+          <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
+        </select>
+        <input type="hidden" name="active_tab" value="multi_mission">
+        <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
+      </form>
+
     <div class="adh-right">
       <!-- Hillshade toggle (right aligned) -->
       <form id="hillshade-form" method="POST" style="display:none;">
