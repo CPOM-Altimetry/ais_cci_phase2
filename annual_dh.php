@@ -19,6 +19,13 @@ if (!isset($PARAMS[$param])) $param = 'dh';
 $annual_view = isset($_GET['annual_view']) ? (string)$_GET['annual_view'] : 'ais';
 $view_suffix = ($annual_view === 'ase') ? '-ase' : '';
 
+// ---- View selection: 'ais' (default) or 'ase'
+$mm_view = isset($_POST['mm_view']) ? (($_POST['mm_view']==='ase') ? 'ase' : 'ais')
+         : (isset($_GET['mm_view'])  ? (($_GET['mm_view']==='ase')  ? 'ase' : 'ais') : 'ais');
+
+// ---- Pick asset suffix based on view
+$suffix = ($mm_view === 'ase') ? '.dh-ase' : '.sec';
+
 // Construct asset names
 $dir  = 'annual_dh_quicklooks';
 $base = 'annual_dh';
@@ -324,7 +331,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     if (!v || !seek || !rail || !winEl) return;
 
     /* ---- timeline for window width ---- */
-    var startISO = root.dataset.start || '1991-01';
+    var startISO = root.dataset.start || '1993-01';
     var endISO   = root.dataset.end   || '2025-12';
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
