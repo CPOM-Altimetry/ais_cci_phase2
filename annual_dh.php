@@ -186,8 +186,8 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 <div class="mmv-wrap" id="annual-dh-player"
      data-start="1991-01"
      data-end="2025-12"
-     data-start-label="Jan 1991"
-     data-end-label="Dec 2025">
+     data-start-label="Jan 1993"
+     data-end-label="Sep 2025">
   <div class="mmv-controls" role="group" aria-label="Video controls">
     <div class="mmv-left">
       <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
@@ -196,12 +196,12 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     </div>
 
     <div class="mmv-center">
-      <span class="mmv-bound mmv-start" data-role="label-start">Jan 1991</span>
+      <span class="mmv-bound mmv-start" data-role="label-start">Jan 1993</span>
       <div class="mmv-scrub-wrap">
         <div class="mmv-window" aria-hidden="true"></div>
         <input class="mmv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
       </div>
-      <span class="mmv-bound mmv-end" data-role="label-end">Dec 2025</span>
+      <span class="mmv-bound mmv-end" data-role="label-end">Sep 2025</span>
     </div>
 
     <div class="mmv-right">
