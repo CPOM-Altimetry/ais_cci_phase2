@@ -54,8 +54,8 @@ multi-mission radar altimetry measurements from ERS-1, ERS-2, ENVISAT,
 CryoSat-2, Sentinel-3A, and Sentinel-3B. Products are stepped by 
 one year to provide the change of height up until the end of that year.
 Each frame of the visualization below contains a plot the Cumulative Annual dH from a single product.
-    Use the controls to view the full time range of surface elevation change.</p>
-     <p>Use the parameter selector to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
+    Use the controls to view the full time range of surface elevation change or
+      to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
   <em>glaciological basin ID</em>. You can also toggle a hill-shaded backdrop for additional context.</p>
 
 <style>
