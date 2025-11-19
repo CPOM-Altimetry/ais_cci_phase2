@@ -156,6 +156,27 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     z-index: 1;
   }
 
+  /* Make the parameter bar (and its <select>) sit above the video controls */
+.adh-filter-bar {            /* the full-width light-grey bar */
+  position: relative;
+  z-index: 50;
+}
+.adh-filter-bar select {
+  position: relative;        /* ensure it participates in stacking */
+  z-index: 51;               /* slightly above the bar */
+}
+
+/* Player controls can stay lower */
+.mmv-wrap { position: relative; z-index: 0; }
+.mmv-controls { position: relative; z-index: 1; }
+
+/* (optional) ensure individual slider bits don't float above the dropdown */
+.mmv-scrub-wrap, .mmv-range, .mmv-window {
+  position: relative;
+  z-index: 1;
+}
+
+
 </style>
 
 <!-- ===== Full-width parameter & hillshade bar ===== -->
