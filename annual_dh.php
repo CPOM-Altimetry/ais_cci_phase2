@@ -140,7 +140,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   <div class="inner">
     <div class="adh-left">
       <div class="adh-param-wrap">
-        <span class="adh-param-label">Parameter:</span>
+        <span class="adh-param-label">Product Parameter:</span>
         <div id="adh-param-dropdown" class="w3-dropdown-hover">
           <button class="w3-button">
             <?php echo h($PARAMS[$param]); ?> <i class="fa fa-caret-down"></i>
