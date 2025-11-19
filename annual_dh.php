@@ -109,7 +109,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   .mmv-media{ background:#000; }
   .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
 
-  .mmv-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
+  .mmv-controls-annual-dh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
   .mmv-left,.mmv-right{ display:flex; align-items:center; gap:10px }
   .mmv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
 
@@ -144,7 +144,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   }
 
   /* 2) Make sure the select sits above nearby controls */
-  .mmv-controls { position: relative; overflow: visible; }
+  .mmv-controls-annual-dh { position: relative; overflow: visible; }
   .param-select, .mmv-speed, select#mmp-param {
     position: relative;
     z-index: 1000; /* above scrub UI */
@@ -168,7 +168,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 
 /* Player controls can stay lower */
 .mmv-wrap-annual-dh { position: relative; z-index: 0; }
-.mmv-controls { position: relative; z-index: 1; }
+.mmv-controls-annual-dh { position: relative; z-index: 1; }
 
 /* (optional) ensure individual slider bits don't float above the dropdown */
 .mmv-scrub-wrap, .mmv-range, .mmv-window {
@@ -232,7 +232,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
      data-end="2025-12"
      data-start-label="Jan 1993"
      data-end-label="Sep 2025">
-  <div class="mmv-controls" role="group" aria-label="Video controls">
+  <div class="mmv-controls-annual-dh" role="group" aria-label="Video controls">
     <div class="mmv-left">
       <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
         <span class="material-icons">play_arrow</span>
