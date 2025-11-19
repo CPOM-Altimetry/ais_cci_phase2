@@ -33,14 +33,14 @@ return [
     
     'mm_latest_fv2' => [
       'file'  => 'multi_mission/ESACCI-AIS-L3C-SEC-MULTIMISSION-5KM-5YEAR-MEANS-202009-202509-fv2.nc',
-      'label' => 'Multi-Mission SEC, latest 5-years',
+      'label' => 'Multi-Mission SEC',
       'mission' => 'All RA',
       'grid_size' => '5km',
       'instrument' => 'RA',
     ],
     'mm_fv2' => [
       'file'  => 'multi_mission/ESACCI-AIS-L3C-SEC-MULTMISSION-5KM-5YEAR-MEANS-199612-202509-fv2.zip',
-      'label' => 'Multi-Mission 5-year SEC, whole archive',
+      'label' => 'Multi-Mission SEC',
       'mission' => 'All RA',
       'grid_size' => '5km',
       'instrument' => 'RA',

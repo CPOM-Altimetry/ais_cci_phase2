@@ -120,7 +120,7 @@ All netcdf products contain parameters on a 5km south polar stereographic (EPSG:
 //===================================================================================
 $rows = [];
 foreach ($products as $id => $meta) {
-    if ($meta['mission'] != 'All RA') continue;
+    if ($meta['label'] != 'Multi-Mission SEC') continue;
     $rel   = $meta['file']  ?? '';
     $label = $meta['label'] ?? basename($rel);
     $abs   = $baseDir . '/' . $rel;
