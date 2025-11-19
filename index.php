@@ -82,8 +82,9 @@
 </body>
 
 <!-- Javascript -->
+<!-- Javascript -->
 <script>
-/* ===== Config from PHP (for initial fetch params) ===== */
+/* ===== Config from PHP (for initial tab) ===== */
 const TAB_DEFAULTS = {
   active:  "<?php echo $active_tab; ?>",
   qlParam: "<?php echo htmlspecialchars($ql_param, ENT_QUOTES); ?>",
@@ -93,12 +94,24 @@ const TAB_DEFAULTS = {
 
 /* ===== Helpers ===== */
 function showTabUI(evt, tabId) {
-  var i, tabcontent = document.getElementsByClassName("tabcontent"),
-         tablinks   = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tabcontent.length; i++) tabcontent[i].style.display = "none";
-  for (i = 0; i < tablinks.length;   i++) tablinks[i].className = tablinks[i].className.replace(" active", "");
+  var i,
+      tabcontent = document.getElementsByClassName("tabcontent"),
+      tablinks   = document.getElementsByClassName("tablinks");
+
+  // hide all panes
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  // remove active class from all buttons
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // show the requested pane
   var pane = document.getElementById(tabId);
   if (pane) pane.style.display = "block";
+
+  // mark correct button active
   if (evt && evt.currentTarget) {
     evt.currentTarget.className += " active";
   } else {
@@ -107,17 +120,7 @@ function showTabUI(evt, tabId) {
   }
 }
 
-function paneIsLoaded(pane){
-  if (!pane) return false;
-  if (pane.dataset && pane.dataset.loaded === "1") return true;
-  return (pane.innerHTML && pane.innerHTML.trim().length > 10);
-}
-
-function markPaneLoaded(pane){
-  if (pane && pane.dataset) pane.dataset.loaded = "1";
-}
-
-/* Bind listeners that the tab’s HTML expects (works for both SSR and lazy) */
+/* Bind listeners that the tab’s HTML expects (works per-page load) */
 function initTabBehaviors(tabId){
   const pane = document.getElementById(tabId);
   if (!pane) return;
@@ -149,51 +152,26 @@ function initTabBehaviors(tabId){
   }
 }
 
-/* ===== Lazy loader ===== */
-const loadedTabs = new Set();
-
-function fetchTabHtml(tabId){
-  const pane = document.getElementById(tabId);
-  if (!pane) return Promise.resolve();
-
-  pane.innerHTML = '<div style="padding:16px;color:#666;">Loading…</div>';
-
-  const params = new URLSearchParams({
-    active_tab: tabId,
-    ql_param:   TAB_DEFAULTS.qlParam,
-    hillshade:  TAB_DEFAULTS.shade,
-    single_mission_view: TAB_DEFAULTS.view
-  });
-
-  return fetch('tab_router.php?' + params.toString(), { credentials: 'same-origin' })
-    .then(r => r.text())
-    .then(html => {
-      pane.innerHTML = html;
-      markPaneLoaded(pane);
-      loadedTabs.add(tabId);
-      initTabBehaviors(tabId);
-    })
-    .catch(err => {
-      console.error(err);
-      pane.innerHTML = '<div style="padding:16px;color:#b00;">Failed to load tab.</div>';
-    });
-}
-
-/* ===== Public: openTab (click handler on buttons) ===== */
+/* ===== Public: openTab (now does a full page reload) ===== */
 function openTab(evt, tabId) {
-  showTabUI(evt, tabId);
-  const pane = document.getElementById(tabId);
-  if (paneIsLoaded(pane)) {
-    initTabBehaviors(tabId);
-    return;
+  if (evt && evt.preventDefault) evt.preventDefault();
+
+  // update ?active_tab in the URL and navigate
+  try {
+    var url = new URL(window.location.href);
+    url.searchParams.set('active_tab', tabId);
+    window.location.href = url.toString();
+  } catch (e) {
+    // very old browsers: fallback
+    window.location.href = '?active_tab=' + encodeURIComponent(tabId);
   }
-  fetchTabHtml(tabId);
 }
 
 /* ===== Initial boot ===== */
 document.addEventListener('DOMContentLoaded', function () {
   var tabId = TAB_DEFAULTS.active || 'intro';
 
+  // clean stale show_single_mission param when not on that tab
   if (tabId !== 'single_mission') {
     try {
       var url = new URL(window.location.href);
@@ -204,16 +182,12 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch(e) {}
   }
 
+  // Just show the already-rendered tab and bind its behaviours
   showTabUI(null, tabId);
-  const pane = document.getElementById(tabId);
-  if (!paneIsLoaded(pane)) {
-    fetchTabHtml(tabId);
-  } else {
-    initTabBehaviors(tabId);
-  }
+  initTabBehaviors(tabId);
 });
 
-/* ===== Minimal, ID-less video player bootstrap (no PHP vars) ===== */
+/* ===== Minimal, ID-less video player bootstrap (unchanged) ===== */
 (function(){
   function fmt(t){ if(!isFinite(t)||t<0) return '0:00'; var m=Math.floor(t/60), s=Math.floor(t%60); return m + ':' + (s<10?'0':'') + s; }
   function chooseSrc(v){
@@ -225,181 +199,165 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function initOnePlayer(root){
-  if (!root || root.dataset.bound === '1') return;
+    if (!root || root.dataset.bound === '1') return;
 
-  // --- Elements ---
-  var v       = root.querySelector('video');
-  if (!v) return;
-  var bPlay   = root.querySelector('[data-role="play"]');
-  var seek    = root.querySelector('[data-role="seek"]');
-  var cur     = root.querySelector('[data-role="cur"]');
-  var dur     = root.querySelector('[data-role="dur"]');
-  var speed   = root.querySelector('[data-role="speed"]');
-  var bPip    = root.querySelector('[data-role="pip"]');
-  var bFs     = root.querySelector('[data-role="fs"]');
+    var v       = root.querySelector('video');
+    if (!v) return;
+    var bPlay   = root.querySelector('[data-role="play"]');
+    var seek    = root.querySelector('[data-role="seek"]');
+    var cur     = root.querySelector('[data-role="cur"]');
+    var dur     = root.querySelector('[data-role="dur"]');
+    var speed   = root.querySelector('[data-role="speed"]');
+    var bPip    = root.querySelector('[data-role="pip"]');
+    var bFs     = root.querySelector('[data-role="fs"]');
 
-  // Oblong window pieces
-  var scrubWrap = root.querySelector('.mmv-scrub-wrap');
-  var winEl     = root.querySelector('.mmv-window');
+    var scrubWrap = root.querySelector('.mmv-scrub-wrap');
+    var winEl     = root.querySelector('.mmv-window');
 
-  // --- Safari-friendly source selection (works with <source> or data-* sources) ---
-  if (!v.currentSrc || v.duration === 0) {
-    if (!v.src && (v.dataset.srcAv1 || v.dataset.srcVp9 || v.dataset.srcH264)) {
-      var best = chooseSrc(v);
-      if (best) { v.src = best; v.load(); }
+    if (!v.currentSrc || v.duration === 0) {
+      if (!v.src && (v.dataset.srcAv1 || v.dataset.srcVp9 || v.dataset.srcH264)) {
+        var best = chooseSrc(v);
+        if (best) { v.src = best; v.load(); }
+      }
     }
-  }
 
-  // --- Helpers ---
-  function syncPlayIcon(){
-    if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
-  }
-  function onMeta(){
-    if (dur) dur.textContent = fmt(v.duration);
-    updateProgress();
-    sizeWindow();  // ensure correct initial sizing after metadata arrives
-  }
-
-  // 5-year window fraction of total (1991–2025 -> 34 years)
-  var WINDOW_FRAC = 5 / (2025 - 1991); // ≈ 0.14706
-
-  function sizeWindow(){
-    if (!scrubWrap || !winEl) return;
-    var w  = scrubWrap.clientWidth;
-    var px = Math.max(16, Math.round(w * WINDOW_FRAC)); // keep a sensible minimum
-    winEl.style.width = px + 'px';
-    positionWindow(); // reposition after sizing
-  }
-  function positionWindow(){
-    if (!scrubWrap || !winEl || !seek) return;
-    var trackW = scrubWrap.clientWidth;
-    var thumbW = winEl.offsetWidth || 0;
-    var pct    = (seek.value/1000);           // 0..1
-    var x      = Math.round(pct * (trackW - thumbW));
-    winEl.style.left = x + 'px';
-  }
-
-  // --- Wire play/pause ---
-  if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
-  v.addEventListener('play',  syncPlayIcon);
-  v.addEventListener('pause', syncPlayIcon);
-
-  // --- Metadata / duration ---
-  v.addEventListener('loadedmetadata', onMeta);
-
-  // --- Progress & scrubbing (Chrome-friendly live thumbnails) ---
-  var seeking = false;
-  var wasPlaying = false;
-  var seekRAF = null;
-
-  function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
-
-  function updateProgress(){
-    if (seeking || !isFinite(v.duration)) return;
-    var p = (v.currentTime / v.duration) * 1000 || 0;
-    if (seek) {
-      seek.value = Math.max(0, Math.min(1000, Math.round(p)));
-      root.style.setProperty('--mmv-fill', (p/10) + '%');
-      positionWindow(); // keep 5-year window in sync during playback
+    function syncPlayIcon(){
+      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
     }
-    if (cur) cur.textContent = fmt(v.currentTime);
-  }
-  v.addEventListener('timeupdate', updateProgress);
-  v.addEventListener('progress',   updateProgress);
-
-  if (seek){
-    function beginSeek(){
-      seeking = true;
-      wasPlaying = !v.paused;
-      if (wasPlaying) v.pause();
+    function onMeta(){
+      if (dur) dur.textContent = fmt(v.duration);
+      updateProgress();
+      sizeWindow();
     }
-    seek.addEventListener('pointerdown', beginSeek);
-    seek.addEventListener('mousedown',   beginSeek);
-    seek.addEventListener('touchstart',  beginSeek, {passive:true});
 
-    seek.addEventListener('input', function(){
-      var nt = pctToTime(seek.value);
-      if (cur) cur.textContent = fmt(nt);
-      root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+    var WINDOW_FRAC = 5 / (2025 - 1991);
+
+    function sizeWindow(){
+      if (!scrubWrap || !winEl) return;
+      var w  = scrubWrap.clientWidth;
+      var px = Math.max(16, Math.round(w * WINDOW_FRAC));
+      winEl.style.width = px + 'px';
       positionWindow();
+    }
+    function positionWindow(){
+      if (!scrubWrap || !winEl || !seek) return;
+      var trackW = scrubWrap.clientWidth;
+      var thumbW = winEl.offsetWidth || 0;
+      var pct    = (seek.value/1000);
+      var x      = Math.round(pct * (trackW - thumbW));
+      winEl.style.left = x + 'px';
+    }
 
-      if (seekRAF) cancelAnimationFrame(seekRAF);
-      seekRAF = requestAnimationFrame(function(){
-        v.currentTime = nt; // Chrome shows the frame while paused
+    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
+    v.addEventListener('play',  syncPlayIcon);
+    v.addEventListener('pause', syncPlayIcon);
+
+    v.addEventListener('loadedmetadata', onMeta);
+
+    var seeking = false;
+    var wasPlaying = false;
+    var seekRAF = null;
+
+    function pctToTime(pct){ return (pct/1000) * (v.duration || 0); }
+
+    function updateProgress(){
+      if (seeking || !isFinite(v.duration)) return;
+      var p = (v.currentTime / v.duration) * 1000 || 0;
+      if (seek) {
+        seek.value = Math.max(0, Math.min(1000, Math.round(p)));
+        root.style.setProperty('--mmv-fill', (p/10) + '%');
+        positionWindow();
+      }
+      if (cur) cur.textContent = fmt(v.currentTime);
+    }
+    v.addEventListener('timeupdate', updateProgress);
+    v.addEventListener('progress',   updateProgress);
+
+    if (seek){
+      function beginSeek(){
+        seeking = true;
+        wasPlaying = !v.paused;
+        if (wasPlaying) v.pause();
+      }
+      seek.addEventListener('pointerdown', beginSeek);
+      seek.addEventListener('mousedown',   beginSeek);
+      seek.addEventListener('touchstart',  beginSeek, {passive:true});
+
+      seek.addEventListener('input', function(){
+        var nt = pctToTime(seek.value);
+        if (cur) cur.textContent = fmt(nt);
+        root.style.setProperty('--mmv-fill', (seek.value/10) + '%');
+        positionWindow();
+
+        if (seekRAF) cancelAnimationFrame(seekRAF);
+        seekRAF = requestAnimationFrame(function(){
+          v.currentTime = nt;
+        });
       });
-    });
 
-    function finishSeek(){
-      if (!seeking) return;
-      var nt = pctToTime(seek.value);
-      v.currentTime = nt;   // ensure final position applied
-      seeking = false;
-      positionWindow();
-      if (wasPlaying) v.play();
+      function finishSeek(){
+        if (!seeking) return;
+        var nt = pctToTime(seek.value);
+        v.currentTime = nt;
+        seeking = false;
+        positionWindow();
+        if (wasPlaying) v.play();
+      }
+      document.addEventListener('pointerup',   finishSeek);
+      document.addEventListener('mouseup',     finishSeek);
+      document.addEventListener('touchend',    finishSeek);
+      seek.addEventListener('pointercancel',   finishSeek);
+      seek.addEventListener('change',          finishSeek);
+
+      v.addEventListener('seeking', updateProgress);
+      v.addEventListener('seeked',  updateProgress);
     }
-    document.addEventListener('pointerup',    finishSeek);
-    document.addEventListener('mouseup',      finishSeek);
-    document.addEventListener('touchend',     finishSeek);
-    seek.addEventListener('pointercancel',    finishSeek);
-    seek.addEventListener('change',           finishSeek); // keyboard/fallback
 
-    v.addEventListener('seeking', updateProgress);
-    v.addEventListener('seeked',  updateProgress);
-  }
+    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
 
-  // --- Speed ---
-  if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-
-  // --- PiP (if available) ---
-  if (bPip && 'pictureInPictureEnabled' in document) {
-    bPip.style.display = '';
-    bPip.addEventListener('click', async function(){
-      try{
-        if (document.pictureInPictureElement) await document.exitPictureInPicture();
-        else await v.requestPictureInPicture();
-      }catch(e){ console.warn('PiP error', e); }
-    });
-  }
-
-  // --- Fullscreen ---
-  function fsActive(){ return document.fullscreenElement === root; }
-  function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
-  if (bFs){
-    bFs.addEventListener('click', function(){
-      if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
-      else{ if (document.exitFullscreen) document.exitFullscreen(); }
-    });
-    document.addEventListener('fullscreenchange', syncFsIcon);
-  }
-
-  // --- Keyboard shortcuts ---
-  root.tabIndex = 0;
-  root.addEventListener('keydown', function(e){
-    switch(e.key){
-      case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
-      case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-      case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-      case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+    if (bPip && 'pictureInPictureEnabled' in document) {
+      bPip.style.display = '';
+      bPip.addEventListener('click', async function(){
+        try{
+          if (document.pictureInPictureElement) await document.exitPictureInPicture();
+          else await v.requestPictureInPicture();
+        }catch(e){ console.warn('PiP error', e); }
+      });
     }
-  });
 
-  // --- Fit wrapper to natural width (reduces black gutters) ---
-  var wrap = root.closest('.mmv-wrap') || root;
-  function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
-  if (v.readyState >= 1) fitToNaturalWidth();
-  v.addEventListener('loadedmetadata', fitToNaturalWidth);
+    function fsActive(){ return document.fullscreenElement === root; }
+    function syncFsIcon(){ if(bFs) bFs.querySelector('.material-icons').textContent = fsActive() ? 'fullscreen_exit' : 'fullscreen'; }
+    if (bFs){
+      bFs.addEventListener('click', function(){
+        if (!fsActive()){ if (root.requestFullscreen) root.requestFullscreen(); }
+        else{ if (document.exitFullscreen) document.exitFullscreen(); }
+      });
+      document.addEventListener('fullscreenchange', syncFsIcon);
+    }
 
-  // --- Size the 5-year window now and on resize ---
-  sizeWindow();
-  window.addEventListener('resize', sizeWindow, { passive:true });
+    root.tabIndex = 0;
+    root.addEventListener('keydown', function(e){
+      switch(e.key){
+        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+        case 'f': fsActive()?document.exitFullscreen():root.requestFullscreen?.(); break;
+      }
+    });
 
-  // Initial UI sync
-  syncPlayIcon();
-  if (v.readyState >= 1) onMeta();
+    var wrap = root.closest('.mmv-wrap') || root;
+    function fitToNaturalWidth(){ if (v.videoWidth > 0) wrap.style.maxWidth = v.videoWidth + 'px'; }
+    if (v.readyState >= 1) fitToNaturalWidth();
+    v.addEventListener('loadedmetadata', fitToNaturalWidth);
 
-  root.dataset.bound = '1';
-}
+    sizeWindow();
+    window.addEventListener('resize', sizeWindow, { passive:true });
 
+    syncPlayIcon();
+    if (v.readyState >= 1) onMeta();
+
+    root.dataset.bound = '1';
+  }
 
   function initAllPlayers(){
     document.querySelectorAll('.mmv-wrap').forEach(initOnePlayer);
@@ -410,200 +368,8 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 </script>
 
-<script>
-(function () {
-  /* ---------------- utils ---------------- */
-  function parseYYYYMM(s){ const m=(s||'').match(/^(\d{4})-(\d{2})$/); return m?{y:+m[1],m:+m[2]}:null; }
-  function monthsBetween(a,b){ if(!a||!b) return 0; return (b.y-a.y)*12 + (b.m-a.m) + 1; }
-  function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
-  function pctToTime(p,d){ return (p/1000)*(d||0); }
 
-  /* --------------- one player --------------- */
-  function initOnePlayer(root){
-    if (!root || root.dataset.bound === '1') return;
 
-    var v      = root.querySelector('video');
-    var bPlay  = root.querySelector('[data-role="play"]');
-    var seek   = root.querySelector('[data-role="seek"]');
-    var speed  = root.querySelector('[data-role="speed"]');
-    var winEl  = root.querySelector('.adhv-window');
-    var rail   = root.querySelector('.adhv-scrub-wrap');
-
-    // Hillshade (same ids as other tabs)
-    var hsToggle = root.querySelector('#toggle-hillshade');
-    var hsForm   = root.querySelector('#hillshade-form');
-    var hsInput  = root.querySelector('#hillshade-input');
-    var hsTab    = root.querySelector('#active_tab_input');
-
-    if (!v || !seek || !rail || !winEl) return;
-
-    /* ---- timeline for window width ---- */
-    var startISO = root.dataset.start || '1993-01';
-    var endISO   = root.dataset.end   || '2025-08';
-    var start    = parseYYYYMM(startISO);
-    var end      = parseYYYYMM(endISO);
-    var totalM   = Math.max(1, monthsBetween(start, end)); // guard
-    var windowM  = 24; // 2 year
-
-    // sizing
-    var railW = 0, windowW = 0, initialEndApplied = false;
-
-    function measureRailWidth(){
-      // Prefer the actual visible rail width
-      const r = (rail.getBoundingClientRect().width || 0);
-      const s = (seek.getBoundingClientRect().width || 0);
-      railW = Math.max(r, s, 0);
-      // Compute the 5-year window width; keep it visible
-      windowW = clamp(railW * (windowM / totalM), 16, railW);
-      winEl.style.width = windowW + 'px';
-    }
-
-    function placeWindow(pct){
-      // pct: 0..1000
-      const x = clamp((pct/1000) * railW - windowW/2, 0, Math.max(0, railW - windowW));
-      winEl.style.left = x + 'px';
-    }
-
-    // Keep the “window” above the track and clicks going to the range
-    winEl.style.pointerEvents = 'none';
-    winEl.style.zIndex = '2';
-    seek.style.position = 'relative';
-    seek.style.zIndex = '1';
-
-    /* ---- UI sync (during playback) ---- */
-    var seeking = false, wasPlaying = false, seekRAF = null;
-
-    function updateProgress(){
-      if (!isFinite(v.duration)) return;
-      if (seeking) return;
-      var p = (v.currentTime / v.duration) * 1000 || 0;
-      seek.value = clamp(Math.round(p), 0, 1000);
-      root.style.setProperty('--adhv-fill', (seek.value/10) + '%');
-      placeWindow(seek.value);
-    }
-
-    v.addEventListener('timeupdate', updateProgress);
-    v.addEventListener('progress',   updateProgress);
-
-    /* ---- play/pause ---- */
-    function syncPlayIcon(){
-      if (bPlay) bPlay.querySelector('.material-icons').textContent = v.paused ? 'play_arrow' : 'pause';
-    }
-    if (bPlay) bPlay.addEventListener('click', function(){ v.paused ? v.play() : v.pause(); });
-    v.addEventListener('play',  syncPlayIcon);
-    v.addEventListener('pause', syncPlayIcon);
-
-    /* ---- seeking (Chrome-friendly live scrub) ---- */
-    function beginSeek(){ seeking = true; wasPlaying = !v.paused; if (wasPlaying) v.pause(); }
-    function finishSeek(){
-      if (!seeking) return;
-      var nt = pctToTime(seek.value, v.duration);
-      v.currentTime = nt;
-      seeking = false;
-      if (wasPlaying) v.play();
-    }
-
-    seek.addEventListener('pointerdown', beginSeek);
-    seek.addEventListener('mousedown',   beginSeek);
-    seek.addEventListener('touchstart',  beginSeek, {passive:true});
-
-    seek.addEventListener('input', function(){
-      var nt = pctToTime(seek.value, v.duration);
-      root.style.setProperty('--adhv-fill', (seek.value/10) + '%');
-      placeWindow(seek.value);
-      if (seekRAF) cancelAnimationFrame(seekRAF);
-      seekRAF = requestAnimationFrame(function(){ v.currentTime = nt; });
-    });
-
-    document.addEventListener('pointerup',   finishSeek);
-    document.addEventListener('mouseup',     finishSeek);
-    document.addEventListener('touchend',    finishSeek);
-    seek.addEventListener('pointercancel',   finishSeek);
-    seek.addEventListener('change',          finishSeek);
-
-    /* ---- speed ---- */
-    if (speed) speed.addEventListener('change', function(){ v.playbackRate = parseFloat(this.value); });
-
-    /* ---- keyboard ---- */
-    root.tabIndex = 0;
-    root.addEventListener('keydown', function(e){
-      switch(e.key){
-        case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
-        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
-      }
-    });
-
-    /* ---- fit wrapper to the video’s natural width ---- */
-    var wrap = root.closest('.adhv-wrap-annual-dh') || root;
-    function fitToNaturalWidth(){
-      if (v.videoWidth > 0) wrap.style.setProperty('--adhv-max', v.videoWidth + 'px');
-    }
-
-    /* ---- initialize slider UI to END to match poster (UI only) ---- */
-    function setToEndUI(){
-      if (initialEndApplied) return;
-      seek.value = 1000;
-      root.style.setProperty('--adhv-fill', '100%');
-      placeWindow(1000);
-      initialEndApplied = true;
-    }
-
-    // Measure rail + set initial UI immediately (so the window has size)
-    measureRailWidth();
-    setToEndUI();
-
-    // When metadata arrives (duration known), keep sizes and UI sane
-    v.addEventListener('loadedmetadata', function(){
-      fitToNaturalWidth();
-      // re-measure (layout may change after fonts/video aspect settle)
-      requestAnimationFrame(function(){
-        measureRailWidth();
-        if (initialEndApplied) placeWindow(seek.value);
-        else setToEndUI();
-      });
-    });
-
-    if (v.readyState >= 1){
-      fitToNaturalWidth();
-      requestAnimationFrame(function(){
-        measureRailWidth();
-        if (initialEndApplied) placeWindow(seek.value);
-        else setToEndUI();
-      });
-    }
-
-    // React to container/viewport resizes
-    if ('ResizeObserver' in window){
-      const ro = new ResizeObserver(function(){ measureRailWidth(); placeWindow(seek.value || 1000); });
-      ro.observe(rail);
-    }
-    window.addEventListener('resize', function(){
-      measureRailWidth();
-      placeWindow(seek.value || 1000);
-    });
-
-    /* ---- hillshade POST toggle (same flow as other tabs) ---- */
-    if (hsToggle && hsForm && hsInput){
-      if (hsTab) hsTab.value = 'annual_dh';
-      hsToggle.addEventListener('change', function(){
-        hsInput.value = this.checked ? 'show' : 'hide';
-        if (hsTab) hsTab.value = 'annual_dh';
-        hsForm.submit();
-      });
-    }
-
-    syncPlayIcon();
-    root.dataset.bound = '1';
-  }
-
-  /* --------------- boot / rebind --------------- */
-  function initAll(){ document.querySelectorAll('.adhv-wrap-annual-dh').forEach(initOnePlayer); }
-  document.addEventListener('DOMContentLoaded', initAll);
-  // for lazy-loaded tabs
-  window.rebindMultiMissionHandlers = initAll;
-})();
-</script>
 
 
 </html>
