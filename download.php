@@ -146,7 +146,7 @@ foreach ($products as $id => $meta) {
 ?>
 
 <h3>Multi-Mission 5-year SEC Product Downloads</h3>
-<p>Each file contains the gridded surface elevation change and uncertainty from a 5-year period, calculated from cross-calibrated 
+<p>Each file contains the gridded rate of surface elevation change (dH/dt) and its uncertainty from a 5-year period, calculated from cross-calibrated 
   radar altimetry missions. 
   The <b>first file</b> shown is the latest 5-year period. 
 The <b>second file</b>
