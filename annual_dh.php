@@ -16,7 +16,7 @@ $PARAMS = [
 if (!isset($PARAMS[$param])) $param = 'dh';
 
 // Optional view (ais default / ase)
-$annual_view = isset($_GET['annual_view']) ? (string)$_GET['annual_view'] : 'ais';
+$annual_view = isset($_GET['mm_view']) ? (string)$_GET['mm_view'] : 'ais';
 $view_suffix = ($annual_view === 'ase') ? '-ase' : '';
 
 // ---- View selection: 'ais' (default) or 'ase'
