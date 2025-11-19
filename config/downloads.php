@@ -13,6 +13,23 @@ return [
   'ip_salt'  => '01a370b9c390885d855420c9140833cbe4d66b8e4b2c34b78b4f922a61425d99',
 
   'products' => [
+
+    //example: ESACCI-AIS-L3C-SEC-MULTIMISSION_ANNUAL_CUMULATIVE_DH_GRID-5KM_199301_202508-fv2.nc
+    'annualdh_latest_fv2' => [
+      'file'  => 'annual_dh/ESACCI-AIS-L3C-SEC-MULTIMISSION_ANNUAL_CUMULATIVE_DH_GRID-5KM_199301_202508-fv2.nc',
+      'label' => 'Cumulative Annual dH',
+      'mission' => 'All RA',
+      'grid_size' => '5km',
+      'instrument' => 'RA',
+    ],
+    //example: ESACCI-AIS-L3C-SEC-MULTIMISSION_ANNUAL_CUMULATIVE_DH_GRID-5KM_199301_202412-fv2.zip
+    'annualdh_fv2' => [
+      'file'  => 'annual_dh/ESACCI-AIS-L3C-SEC-MULTIMISSION_ANNUAL_CUMULATIVE_DH_GRID-5KM_199301_202412-fv2.zip',
+      'label' => 'Cumulative Annual dH',
+      'mission' => 'All RA',
+      'grid_size' => '5km',
+      'instrument' => 'RA',
+    ],
     
     'mm_latest_fv2' => [
       'file'  => 'multi_mission/ESACCI-AIS-L3C-SEC-MULTIMISSION-5KM-5YEAR-MEANS-202009-202509-fv2.nc',

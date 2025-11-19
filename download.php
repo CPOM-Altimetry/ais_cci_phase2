@@ -183,6 +183,75 @@ The <b>second file</b>
 </table>
 
 <?php
+
+//===================================================================================
+// Build rows for Cumulative Annual DH
+//===================================================================================
+$rows = [];
+foreach ($products as $id => $meta) {
+    if ($meta['label'] != 'Cumulative Annual dH') continue;
+    $rel   = $meta['file']  ?? '';
+    $label = $meta['label'] ?? basename($rel);
+    $abs   = $baseDir . '/' . $rel;
+    $mission = $meta['mission'] ?? '';
+    $grid_size = $meta['grid_size'] ?? '';
+    $exists = is_file($abs) && is_readable($abs);
+    $sizeText = $exists ? format_bytes(filesize($abs)) : '—';
+    $mtime    = $exists ? date('Y-m-d', filemtime($abs)) : '—';
+
+    $rows[] = [
+        'file'   => $rel,
+        'id'     => $id,
+        'label'  => $label,
+        'exists' => $exists,
+        'size'   => $sizeText,
+        'mtime'  => $mtime,
+        'mission' => $mission,
+        'grid_size' => $grid_size,
+    ];
+}
+// Optional: sort alphabetically by label
+//usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
+?>
+
+<h3>Cumulative Annual dH Product Downloads</h3>
+<p>Each file contains the gridded cumulative annual surface elevation change since 1st Jan 1993, calculated from cross-calibrated 
+  radar altimetry missions. 
+  The <b>first file</b> shown is the latest 5-year period. 
+The <b>second file</b>
+  is a zip of all  netcdf files since 1993, stepped by 1 year.</p>
+<table class="downloads">
+  <thead>
+    <tr>
+      <th style="width:10%">Mission</th>
+      <th style="width:10%">Size</th>
+      <th style="width: 55%">File</th>
+      <th style="width:15%">Updated</th>
+      <th style="width:10%">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($rows as $r): ?>
+      <tr>
+         <td><?php echo h($r['mission']); ?></td>
+        <td><?php echo h($r['size']); ?></td>
+        <td><?php echo h(basename($r['file'])); ?></td>
+        <td class="muted"><?php echo h($r['mtime']); ?></td>
+        <td>
+          <?php if ($r['exists']): ?>
+            <a class="download-btn" href="fetch.php?id=<?php echo urlencode($r['id']); ?>">
+              <span class="material-icons" aria-hidden="true">download</span>
+            </a>
+          <?php else: ?>
+            <span class="unavail">Unavailable</span>
+          <?php endif; ?>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
+
+<?php
 //===================================================================================
 // Build rows for Single Mission RA
 //===================================================================================
