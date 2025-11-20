@@ -325,8 +325,8 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   var bFs     = root.querySelector('[data-role="fs"]');
 
   // Oblong window bits (only present for multi-mission)
-  var scrubWrap = root.querySelector('.mmv-scrub-wrap');
-  var winEl     = root.querySelector('.mmv-window');
+  var scrubWrap = root.querySelector('.adhv-scrub-wrap');
+  var winEl     = root.querySelector('.adhv-window');
 
   // --- Slider range: now generic (works for annual & 5-year) ---
   var seekMin   = seek ? parseFloat(seek.min || 0)    : 0;
@@ -343,7 +343,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     if (!seek) return;
     frac = Math.max(0, Math.min(1, frac || 0));
     seek.value = seekMin + frac * seekRange;
-    root.style.setProperty('--mmv-fill', (frac * 100) + '%');
+    root.style.setProperty('--adhv-fill', (frac * 100) + '%');
     positionWindow(); // keep 5-year window (if present) in sync
   }
   function timeFromFrac(frac){
