@@ -180,7 +180,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
 }
 
 .adhv-view-select {
-  background:lightgray; color:#000; border-radius:6px;padding: 6px;
+  background:white; color:#000; border-radius:6px;padding: 6px;
 }
 
 </style>
