@@ -124,7 +124,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   .adhv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
   .adhv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
-  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer }
+  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer; z-index:2000; }
   .adhv-range:focus{ outline:none }
   .adhv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--adhv-rail-fill) var(--adhv-fill,0%),var(--adhv-rail) var(--adhv-fill,0%)); }
   .adhv-range::-webkit-slider-thumb{ appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0 }
@@ -260,7 +260,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
       <span class="adhv-bound adhv-start" data-role="label-start">Jan 1993</span>
       <div class="adhv-scrub-wrap">
         <div class="adhv-window" aria-hidden="true"></div>
-        <input class="adhv-range" data-role="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
+        <input class="adhv-range" data-role="seek" type="range" min="0" max="32" value="0" step="1" aria-label="Seek">
       </div>
       <span class="adhv-bound adhv-end" data-role="label-end">Aug 2025</span>
     </div>
