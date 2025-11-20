@@ -218,7 +218,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
             <?php
               $base = "index.php?active_tab=annual_dh"
                     . "&hillshade=" . urlencode($hillshade)
-                    . "&annual_view=" . urlencode($annual_view);
+                    . "&adh_view=" . urlencode($adh_view);
               foreach ($PARAMS as $key => $label):
             ?>
               <a class="w3-bar-item w3-button"
@@ -248,7 +248,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
         <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
         <input type="hidden" name="active_tab" value="annual_dh">
         <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
-        <input type="hidden" name="annual_view" value="<?php echo h($annual_view); ?>">
+        <input type="hidden" name="adh_view" value="<?php echo h($adh_view); ?>">
       </form>
 
       <div class="adh-hs">
