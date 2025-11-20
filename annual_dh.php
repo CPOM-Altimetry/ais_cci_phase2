@@ -179,6 +179,9 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   z-index: 1;
 }
 
+.adhv-view-select {
+  background:#21578b; color:#fff; border-radius:6px;
+}
 
 </style>
 
