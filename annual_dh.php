@@ -124,18 +124,37 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
   .adhv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
   .adhv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
-  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer; z-index:2000; }
+  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer;  }
   .adhv-range:focus{ outline:none }
   .adhv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--adhv-rail-fill) var(--adhv-fill,0%),var(--adhv-rail) var(--adhv-fill,0%)); }
-  .adhv-range::-webkit-slider-thumb{ appearance:none; width:0; height:0; border:0; background:transparent; margin-top:0 }
-  .adhv-range::-moz-range-track{ height:6px; background:var(--adhv-rail); border-radius:999px }
-  .adhv-range::-moz-range-thumb{ width:0; height:0; border:0; background:transparent }
+  .adhv-range::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  margin-top:-6px;          /* vertically center on 6px track */
+  width:18px;
+  height:18px;
+  background:#fff;
+  border:1px solid #cbd5e1;
+  border-radius:50%;
+}
+.adhv-range::-moz-range-track{
+  height:6px;
+  background:var(--adhv-rail);
+  border-radius:999px;
+}
+.adhv-range::-moz-range-thumb{
+  width:16px;
+  height:16px;
+  background:#fff;
+  border:1px solid #cbd5e1;
+  border-radius:50%;
+}
 
-  .adhv-window{
-    position:absolute; top:50%; transform:translateY(-50%);
-    height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
-    pointer-events:none; width:64px;
-  }
+/* We don’t need the fake 5-year window for annual dH */
+.adhv-window{
+  display:none;
+}
+
   /* 1) Don't clip the dropdown with the outer card */
   .adhv-wrap-annual-dh { overflow: visible; }
 
