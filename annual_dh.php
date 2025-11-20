@@ -334,7 +334,7 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     var start    = parseYYYYMM(startISO);
     var end      = parseYYYYMM(endISO);
     var totalM   = Math.max(1, monthsBetween(start, end)); // guard
-    var windowM  = 24; // 2 year
+    var windowM  = 12; // 2 year
 
     // sizing
     var railW = 0, windowW = 0, initialEndApplied = false;
@@ -420,8 +420,8 @@ Each frame of the visualization below contains a plot the Cumulative Annual dH f
     root.addEventListener('keydown', function(e){
       switch(e.key){
         case ' ': case 'k': e.preventDefault(); v.paused ? v.play() : v.pause(); break;
-        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 5); break;
-        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 5); break;
+        case 'ArrowLeft':  v.currentTime = Math.max(0, v.currentTime - 1); break;
+        case 'ArrowRight': v.currentTime = Math.min(v.duration||0, v.currentTime + 1); break;
       }
     });
 
