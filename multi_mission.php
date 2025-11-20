@@ -44,7 +44,7 @@ if (is_file($timeline_json) && is_readable($timeline_json)) {
 
 $PLAYER_ID = 'mmv-player';
 ?>
-<h3>Multi-Mission 5-year Surface Elevation Change (1991–2025)</h3>
+<h3>Multi-Mission 5-year Rate of Surface Elevation Change (1991–2025)</h3>
 <img id="multi_mission_logo" src="images/multi_mission_logo.webp" alt="Single mission logo" class="float-right-img">
 
 <p>Each netCDF4 product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
