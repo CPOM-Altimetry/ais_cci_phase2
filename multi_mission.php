@@ -215,13 +215,13 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
           </button>
           <div class="w3-dropdown-content w3-bar-block w3-card-4">
             <?php
-              $base = "index.php?active_tab=annual_dh"
+              $base = "index.php?active_tab=multi_mission"
                     . "&hillshade=" . urlencode($hillshade)
                     . "&mm_view=" . urlencode($mm_view);
               foreach ($PARAMS as $key => $label):
             ?>
               <a class="w3-bar-item w3-button"
-                 href="<?php echo $base . '&ql_param=' . urlencode($key) . '#annual_dh'; ?>">
+                 href="<?php echo $base . '&ql_param=' . urlencode($key) . '#multi_mission'; ?>">
                  <?php echo h($label); ?>
               </a>
             <?php endforeach; ?>
@@ -237,7 +237,7 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
           <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
           <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
-        <input type="hidden" name="active_tab" value="annual_dh">
+        <input type="hidden" name="active_tab" value="multi_mission">
         <input type="hidden" name="hillshade" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
       </form>
 
@@ -245,7 +245,7 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
       <!-- Hillshade toggle (right aligned) -->
       <form id="hillshade-form" method="POST" style="display:none;">
         <input type="hidden" name="hillshade" id="hillshade-input" value="<?php echo $use_hs ? 'show' : 'hide'; ?>">
-        <input type="hidden" name="active_tab" value="annual_dh">
+        <input type="hidden" name="active_tab" value="multi_mission">
         <input type="hidden" name="ql_param" value="<?php echo h($param); ?>">
         <input type="hidden" name="mm_view" value="<?php echo h($mm_view); ?>">
       </form>
