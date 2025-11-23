@@ -106,27 +106,27 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   .mm-hs .toggle-text{ font-weight:600; }
 
   /* Player shell (unchanged) */
-  :root { --adhv-rail:#d7dbe0; --adhv-rail-fill:#2e7bd1; }
-  .adhv-wrap-annual-dh{ margin:10px auto; max-width:var(--adhv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
-  .adhv-media{ background:#000; }
-  .adhv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
+  :root { --mmv-rail:#d7dbe0; --mmv-rail-fill:#2e7bd1; }
+  .mmv-wrap-multi-mission{ margin:10px auto; max-width:var(--mmv-max,1200px); border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; }
+  .mmv-media{ background:#000; }
+  .mmv-media video{ display:block; width:100%; height:auto; aspect-ratio:900/750; background:#000; }
 
-  .adhv-controls-annual-dh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
-  .adhv-left,.adhv-right{ display:flex; align-items:center; gap:10px }
-  .adhv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
+  .mmv-controls-annual-dh{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px; background:#f7f9fc; border-top:1px solid #e6ebf0; }
+  .mmv-left,.mmv-right{ display:flex; align-items:center; gap:10px }
+  .mmv-center{ flex:1 1 auto; display:flex; align-items:center; gap:10px }
 
-  .adhv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
-  .adhv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
-  .adhv-btn .material-icons{ font-size:20px; line-height:1 }
+  .mmv-btn{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #d9dee5; border-radius:8px; background:#fff; cursor:pointer; transition:background .15s,border-color .15s; }
+  .mmv-btn:hover{ background:#eef5ff; border-color:#c9d7ee }
+  .mmv-btn .material-icons{ font-size:20px; line-height:1 }
 
-  .adhv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
-  .adhv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
+  .mmv-speed{ border:1px solid #d9dee5; border-radius:8px; background:#fff; height:36px; padding:0 8px; }
+  .mmv-bound{ font:13px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Open Sans',sans-serif; color:#333; white-space:nowrap; }
 
-  .adhv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
-  .adhv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer;  }
-  .adhv-range:focus{ outline:none }
-  .adhv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--adhv-rail-fill) var(--adhv-fill,0%),var(--adhv-rail) var(--adhv-fill,0%)); }
-  .adhv-range::-webkit-slider-thumb{
+  .mmv-scrub-wrap{ position:relative; flex:1 1 auto; display:flex; align-items:center; height:22px; min-width:160px }
+  .mmv-range{ appearance:none; background:transparent; width:100%; height:22px; cursor:pointer;  }
+  .mmv-range:focus{ outline:none }
+  .mmv-range::-webkit-slider-runnable-track{ height:6px; border-radius:999px; background:linear-gradient(to right,var(--mmv-rail-fill) var(--mmv-fill,0%),var(--mmv-rail) var(--mmv-fill,0%)); }
+  .mmv-range::-webkit-slider-thumb{
   -webkit-appearance:none;
   appearance:none;
   margin-top:-6px;          /* vertically center on 6px track */
@@ -136,12 +136,12 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   border:1px solid #cbd5e1;
   border-radius:50%;
 }
-.adhv-range::-moz-range-track{
+.mmv-range::-moz-range-track{
   height:6px;
-  background:var(--adhv-rail);
+  background:var(--mmv-rail);
   border-radius:999px;
 }
-.adhv-range::-moz-range-thumb{
+.mmv-range::-moz-range-thumb{
   width:16px;
   height:16px;
   background:#fff;
@@ -150,29 +150,29 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
 }
 
 /* We don’t need the fake 5-year window for annual dH */
-.adhv-window{
+.mmv-window{
   display:none;
 }
 
   /* 1) Don't clip the dropdown with the outer card */
-  .adhv-wrap-annual-dh { overflow: visible; }
+  .mmv-wrap-multi-mission { overflow: visible; }
 
   /* Keep the rounded-corner clipping only on the media area */
-  .adhv-media {
+  .mmv-media {
     overflow: hidden;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
   }
 
   /* 2) Make sure the select sits above nearby controls */
-  .adhv-controls-annual-dh { position: relative; overflow: visible; }
-  .param-select, .adhv-speed, select#mmp-param {
+  .mmv-controls-annual-dh { position: relative; overflow: visible; }
+  .param-select, .mmv-speed, select#mmp-param {
     position: relative;
     z-index: 1000; /* above scrub UI */
   }
 
   /* Lower the scrubber's stacking level */
-  .adhv-scrub-wrap, .adhv-scrub-wrap * {
+  .mmv-scrub-wrap, .mmv-scrub-wrap * {
     position: relative;
     z-index: 1;
   }
@@ -188,16 +188,16 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
 }
 
 /* Player controls can stay lower */
-.adhv-wrap-annual-dh { position: relative; z-index: 0; }
-.adhv-controls-annual-dh { position: relative; z-index: 1; }
+.mmv-wrap-multi-mission { position: relative; z-index: 0; }
+.mmv-controls-annual-dh { position: relative; z-index: 1; }
 
 /* (optional) ensure individual slider bits don't float above the dropdown */
-.adhv-scrub-wrap, .adhv-range, .adhv-window {
+.mmv-scrub-wrap, .mmv-range, .mmv-window {
   position: relative;
   z-index: 1;
 }
 
-.adhv-view-select {
+.mmv-view-select {
   background:white; color:#000; border-radius:6px;padding: 6px;
 }
 
@@ -231,9 +231,9 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
     </div>
 
     <!-- View selector (wired via form submit; preserves hillshade + tab) -->
-      <form class="adhv-view" id="adhv-view-form" method="POST" action="">
-        <label for="adhv-view-select">View:</label>
-        <select id="adhv-view-select" class="adhv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
+      <form class="mmv-view" id="mmv-view-form" method="POST" action="">
+        <label for="mmv-view-select">View:</label>
+        <select id="mmv-view-select" class="mmv-view-select" name="mm_view" aria-label="Select view" onchange="this.form.submit()">
           <option value="ais" <?php echo $mm_view==='ais'?'selected':''; ?>>Antarctica Ice Sheet</option>
           <option value="ase" <?php echo $mm_view==='ase'?'selected':''; ?>>ASE: PIG, Thwaites Glaciers</option>
         </select>
@@ -262,29 +262,29 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
 </div>
 
 <!-- ===== Video player ===== -->
-<div class="adhv-wrap-annual-dh" id="annual-dh-player"
+<div class="mmv-wrap-multi-mission" id="annual-dh-player"
      data-start="1993-01"
      data-end="2025-08"
      data-start-label="Jan 1993"
      data-end-label="Aug 2025">
-  <div class="adhv-controls-annual-dh" role="group" aria-label="Video controls">
-    <div class="adhv-left">
-      <button class="adhv-btn" data-role="play" aria-label="Play/Pause">
+  <div class="mmv-controls-annual-dh" role="group" aria-label="Video controls">
+    <div class="mmv-left">
+      <button class="mmv-btn" data-role="play" aria-label="Play/Pause">
         <span class="material-icons">play_arrow</span>
       </button>
     </div>
 
-    <div class="adhv-center">
-      <span class="adhv-bound adhv-start" data-role="label-start">Jan 1993</span>
-      <div class="adhv-scrub-wrap">
-        <div class="adhv-window" aria-hidden="true"></div>
-        <input class="adhv-range" data-role="seek" type="range" min="0" max="32" value="0" step="1" aria-label="Seek">
+    <div class="mmv-center">
+      <span class="mmv-bound mmv-start" data-role="label-start">Jan 1993</span>
+      <div class="mmv-scrub-wrap">
+        <div class="mmv-window" aria-hidden="true"></div>
+        <input class="mmv-range" data-role="seek" type="range" min="0" max="32" value="0" step="1" aria-label="Seek">
       </div>
-      <span class="adhv-bound adhv-end" data-role="label-end">Aug 2025</span>
+      <span class="mmv-bound mmv-end" data-role="label-end">Aug 2025</span>
     </div>
 
-    <div class="adhv-right">
-      <select class="adhv-speed" data-role="speed" aria-label="Playback speed">
+    <div class="mmv-right">
+      <select class="mmv-speed" data-role="speed" aria-label="Playback speed">
         <option value="0.5">0.5×</option>
         <option value="0.75">0.75×</option>
         <option value="1" selected>1×</option>
@@ -295,7 +295,7 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
     </div>
   </div>
 
-  <div class="adhv-media">
+  <div class="mmv-media">
     <video
       preload="metadata"
       playsinline
@@ -343,8 +343,8 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
   var bFs     = root.querySelector('[data-role="fs"]');
 
   // Oblong window bits (only present for multi-mission)
-  var scrubWrap = root.querySelector('.adhv-scrub-wrap');
-  var winEl     = root.querySelector('.adhv-window');
+  var scrubWrap = root.querySelector('.mmv-scrub-wrap');
+  var winEl     = root.querySelector('.mmv-window');
 
   // --- Slider range: now generic (works for annual & 5-year) ---
   var seekMin   = seek ? parseFloat(seek.min || 0)    : 0;
@@ -361,7 +361,7 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
     if (!seek) return;
     frac = Math.max(0, Math.min(1, frac || 0));
     seek.value = seekMin + frac * seekRange;
-    root.style.setProperty('--adhv-fill', (frac * 100) + '%');
+    root.style.setProperty('--mmv-fill', (frac * 100) + '%');
     positionWindow(); // keep 5-year window (if present) in sync
   }
   function timeFromFrac(frac){
@@ -536,7 +536,7 @@ multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetr
 }
 
   /* --------------- boot / rebind --------------- */
-  function initAll(){ document.querySelectorAll('.adhv-wrap-annual-dh').forEach(initOnePlayer); }
+  function initAll(){ document.querySelectorAll('.mmv-wrap-multi-mission').forEach(initOnePlayer); }
   document.addEventListener('DOMContentLoaded', initAll);
   // for lazy-loaded tabs
   window.rebindMultiMissionHandlers = initAll;
