@@ -59,7 +59,8 @@ one year to provide the change of height up until the end of that year.
 Each frame of the visualization below contains a plot the Cumulative Annual dH from a single product.
     Use the controls to view the full time range of surface elevation change or
       to switch between <em>dH</em>, its <em>uncertainty</em>, <em>surface type</em>, and
-  <em>glaciological basin ID</em>. You can also toggle a hill-shaded backdrop for additional context.</p>
+  <em>glaciological basin ID</em>.   You can also view a zoomed area of Pine Island/Thwaites glaciers or toggle a hill-shaded backdrop for additional context.
+</p>
 
 <style>
   /* Full-width parameter bar to match single_mission.php */
