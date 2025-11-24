@@ -60,7 +60,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   between product files. </p><p>Use the controls to view the full time range of 
   5-year dh/dt or to switch to its uncertainty, 
   the surface type parameter, or glaciological basin ID. 
-  You can also toggle a hill-shaded backdrop for additional context.
+  You can also view a zoomed area of Pine Island/Thwaites glaciers or toggle a hill-shaded backdrop for additional context.
 </p>
 
 
