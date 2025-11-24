@@ -267,9 +267,9 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 <!-- ===== Video player ===== -->
 <div class="mmv-wrap-multi-mission" id="annual-dh-player"
-     data-start="1993-01"
+     data-start="1991-12"
      data-end="2025-08"
-     data-start-label="Jan 1993"
+     data-start-label="Dec 1991"
      data-end-label="Aug 2025">
   <div class="mmv-controls-annual-dh" role="group" aria-label="Video controls">
     <div class="mmv-left">
@@ -279,7 +279,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     </div>
 
     <div class="mmv-center">
-      <span class="mmv-bound mmv-start" data-role="label-start">Jan 1993</span>
+      <span class="mmv-bound mmv-start" data-role="label-start">Dec 1991</span>
       <div class="mmv-scrub-wrap">
         <div class="mmv-window" aria-hidden="true"></div>
         <input class="mmv-range" data-role="seek" type="range" min="0" max="32" value="0" step="1" aria-label="Seek">
