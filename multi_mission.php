@@ -154,9 +154,15 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 }
 
 /* We don’t need the fake 5-year window for annual dH */
-.mmv-window{
+/* .mmv-window{
   display:none;
-}
+} */
+/* Custom 5-year window “thumb” (JS positions this with transforms) */
+  .mmv-window{
+    position:absolute; top:50%; transform:translateY(-50%);
+    height:18px; border-radius:9px; border:1px solid #cbd5e1; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.06);
+    pointer-events:none; width:64px;
+  }
 
   /* 1) Don't clip the dropdown with the outer card */
   .mmv-wrap-multi-mission { overflow: visible; }
