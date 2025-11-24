@@ -8,8 +8,8 @@ $active_tab  = isset($active_tab) ? $active_tab : 'multi_mission';
 // Parameter selector values
 $param = isset($_GET['ql_param']) ? (string)$_GET['ql_param'] : 'sec';
 $PARAMS = [
-  'sec'            => 'sec',
-  'sec_uncertainty'   => 'Uncertainty of sec',
+  'sec'            => 'dH/dt',
+  'sec_uncertainty'   => 'Uncertainty of dH/dt',
   'surface_type'  => 'Surface Type',
   'basin_id'      => 'Glaciological Basin ID',
 ];
@@ -56,7 +56,7 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   for each 5 year period over the
   complete radar altimetry record since 1991. These are calculated from cross-calibrated time-series of 
   elevation change derived from radar altimetry measurements of surface height taken from ERS-1, 
-  ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, Sentinel-3B. The 5-year periods are stepped by one month 
+  ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, and Sentinel-3B. The 5-year periods are stepped by one month 
   between product files. </p><p>Use the controls to view the full time range of 
   5-year dh/dt or to switch to its uncertainty, 
   the surface type parameter, or glaciological basin ID. 
