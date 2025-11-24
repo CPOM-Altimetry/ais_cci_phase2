@@ -48,11 +48,11 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 
 <!-- ===== Intro ===== -->
-<h3>Multi-Mission 5-year Rate of Surface Elevation Change (1991–2025)</h3>
+<h3>Multi-Mission 5-year dH/dt (Rate of Surface Elevation Change) between 1991 and 2025</h3>
 
 <img id="multi_mission_logo" src="images/multi_mission_logo.webp" alt="Single mission logo" class="float-right-img">
 
-<p>This netcdf dataset contains the gridded rate of ice sheet surface elevation change (SEC) 
+<p>This netcdf dataset contains the gridded dH/dt (rate of ice sheet surface elevation change (SEC))
   for each 5 year period over the
   complete radar altimetry record since 1991. These are calculated from cross-calibrated time-series of 
   elevation change derived from radar altimetry measurements of surface height taken from ERS-1, 
