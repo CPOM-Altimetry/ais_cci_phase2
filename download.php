@@ -286,6 +286,8 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 ?>
 
 <h3>Radar Altimetry Mission SEC Downloads (Single Mission)</h3>
+<p>Each netcdf product file contains the gridded rate of surface elevation change,
+  its uncertainty and associated parameters from the full operational period of each radar altimetry mission.</p>
 <table class="downloads">
   <thead>
     <tr>
@@ -352,7 +354,8 @@ usort($rows, function($a,$b){ return strcasecmp($a['label'], $b['label']); });
 ?>
 
 <h3>Laser Altimetry Mission SEC Downloads</h3>
-
+<p>This netcdf product file contains the gridded rate of surface elevation change,
+  its uncertainty and associated parameters from the full available operational period of ICESat-2.</p>
 <table class="downloads">
   <thead>
     <tr>
