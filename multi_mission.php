@@ -52,13 +52,17 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 <img id="multi_mission_logo" src="images/multi_mission_logo.webp" alt="Single mission logo" class="float-right-img">
 
-<p>Each netCDF4 product in this dataset contains the gridded surface elevation change (SEC) for a single 5 year period.
-The periods are stepped by one month between product files. Each period of SEC is calculated from 
-multi-mission (ERS-1, ERS-2, ENVISAT, CryoSat-2) cross-calibrated radar altimetry between 1991 and 2025.
+<p>This netcdf dataset contains the gridded rate of ice sheet surface elevation change (SEC) 
+  for each 5 year period over the
+  complete radar altimetry record since 1991. These are calculated from cross-calibrated time-series of 
+  elevation change derived from radar altimetry measurements of surface height taken from ERS-1, 
+  ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, Sentinel-3B. The 5-year periods are stepped by one month 
+  between product files. </p><p>Use the controls to view the full time range of 
+  5-year dh/dt or to switch to its uncertainty, 
+  the surface type parameter, or glaciological basin ID. 
+  You can also toggle a hill-shaded backdrop for additional context.
 </p>
 
-<p>Each frame of the visualization below contains a plot of a single product's 5-year SEC.
-    Use the controls to view the full time range of surface elevation change.</p>
 
 <style>
   /* Full-width parameter bar to match single_mission.php */
