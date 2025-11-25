@@ -88,7 +88,7 @@ return [
       'instrument' => 'RA',
     ],
     'is2_fv2' => [
-      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-IS2-5KM-20180928-20250421-fv2.nc',
+      'file'  => 'single_mission/ESACCI-AIS-L3C-SEC-IS2-5KM-20181015-20250421-fv2.nc',
       'label' => 'Surface Elevation Change',
       'mission' => 'ICESat-2',
       'grid_size' => '5km',
