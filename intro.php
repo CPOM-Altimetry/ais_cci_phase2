@@ -15,7 +15,7 @@
             <li>5-year dH/dt (rate of surface elevation change) from <b>multi-mission</b> cross-calibrated radar altimetry from 
             1991 onwards, in monthly steps, on a 5km grid.</li>
             <li>Cumulative dH in annual steps from <b>multi-mission</b> cross-calibrated radar 
-            altimetry since 1991 on a 5km grid.</li>
+            altimetry since 1993 on a 5km grid.</li>
             <li>dH/dt (rate of surface elevation change) from the full time period of <b>individual satellite radar altimetry 
                 missions</b> (ERS-1, ERS-2, ENVISAT, CryoSat-2, Sentinel-3A, Sentinel-3B) on a 5km grid.</li>
             <li>dH/dt (rate of surface elevation change) from the full period of the <b>laser altimetry mission</b> ICESat-2 on a 5km grid.</li>
